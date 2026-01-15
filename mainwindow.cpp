@@ -358,18 +358,6 @@ void MainWindow::showSettingsWindow()
     minTrayLayout->addStretch();
     connect(minTrayCb, &QCheckBox::stateChanged, this, &MainWindow::onMinToTrayChanged);
 
-    QHBoxLayout *themeLayout = new QHBoxLayout;
-    QLabel *themeLab = new QLabel("主题颜色：");
-    QComboBox *themeCbx = new QComboBox;
-    themeCbx->addItem("跟随系统");
-    themeCbx->addItem("浅色主题");
-    themeCbx->addItem("深色主题");
-    themeCbx->setCurrentIndex(m_themeType);
-    themeLayout->addWidget(themeLab);
-    themeLayout->addWidget(themeCbx);
-    themeLayout->addStretch();
-    connect(themeCbx, &QComboBox::currentIndexChanged, this, &MainWindow::onThemeChanged);
-
     QHBoxLayout *pathLayout = new QHBoxLayout;
     QPushButton *pathBtn = new QPushButton("打开存档文件位置");
     pathBtn->setStyleSheet("background-color:#2D8CF0;");
@@ -386,7 +374,6 @@ void MainWindow::showSettingsWindow()
 
     mainLayout->addLayout(autoStartLayout);
     mainLayout->addLayout(minTrayLayout);
-    mainLayout->addLayout(themeLayout);
     mainLayout->addLayout(pathLayout);
     mainLayout->addLayout(rateLayout);
     mainLayout->addStretch();
