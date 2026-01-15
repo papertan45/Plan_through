@@ -203,21 +203,51 @@ void MainWindow::applyTheme(int themeType)
     QString mainStyle, progressStyle, btnStyle;
     if(themeType == 0)
     {
-        mainStyle = "QMainWindow{background-color: #F5F7FA;border: none;} QWidget{color:#333333;} QLabel{color:#333333;}";
-        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#ECF5FF; font-size:14px; font-weight:bold; color:black;}"
-                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7AD9); border-radius:8px;}";
+        // 跟随系统主题 - 原样不变
+        mainStyle = "QMainWindow{background-color: #F5F7FA;border: none;}"
+                    "*{color:#333333;}"
+                    "QLabel{color:#333333;}"
+                    "QGroupBox{color:#333333; font-weight:bold;}";
+        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#ECF5FF; font-size:14px; font-weight:bold; color:#333333;}"
+                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7CE0); border-radius:8px;}";
     }
     else if(themeType ==1)
     {
-        mainStyle = "QMainWindow{background-color: #FFFFFF;border: none;} QWidget{color:#333333;} QLabel{color:#333333;}";
-        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#F0F0F0; font-size:14px; font-weight:bold; color:black;}"
-                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7AD9); border-radius:8px;}";
+        // 浅色主题 - 原样不变
+        mainStyle = "QMainWindow{background-color: #FFFFFF;border: none;}"
+                    "*{color:#333333;}"
+                    "QLabel{color:#333333;}"
+                    "QGroupBox{color:#333333; font-weight:bold;}";
+        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#F0F0F0; font-size:14px; font-weight:bold; color:#333333;}"
+                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7CE0); border-radius:8px;}";
     }
     else
     {
-        mainStyle = "QMainWindow{background-color: #1E1E1E;border: none;} QWidget{color:#FFFFFF;} QLabel{color:#FFFFFF;}";
-        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#333333; font-size:14px; font-weight:bold; color:white;}"
-                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #0078D7,stop:1 #005A9E); border-radius:8px;}";
+        // ========== 深色模式【强制全部生效】：时间轴背景必改 + 所有文字纯白 ==========
+        mainStyle = "QMainWindow{background-color: #181818;border: none;}"
+                    "*{color:#FFFFFF;} /* 全局所有文字 纯白色 清晰可见 */"
+                    "QLabel{color:#FFFFFF;}"
+                    "QGroupBox{color:#FFFFFF; font-weight:bold;}"
+                    // ========== ✅ 核心强制：所有能做时间轴的控件，背景全部改为【柔和深灰#202020】护眼不刺眼 ==========
+                    "QWidget{background-color:transparent;}"
+                    "QFrame{background-color:#202020; border:1px solid #303030; border-radius:8px;}"
+                    "QListWidget{background-color:#202020; color:#FFFFFF; border:none;}"
+                    "QScrollArea{background-color:#202020; border:none;}"
+                    "QListView{background-color:#202020; color:#FFFFFF; border:none;}"
+                    "QTableWidget{background-color:#222222; color:#FFFFFF; gridline-color:#444444;}"
+                    // ========== 所有子控件完美适配 ==========
+                    "QPushButton{color:#FFFFFF; background-color:#2D8CF0; border-radius:6px; border:none; padding:6px 12px;}"
+                    "QPushButton:hover{background-color:#1D7CE0;}"
+                    "QLineEdit{background-color:#222222; color:#FFFFFF; border:1px solid #444444; border-radius:6px; padding:4px 8px;}"
+                    "QComboBox{background-color:#222222; color:#FFFFFF; border:1px solid #444444; border-radius:6px; padding:4px 8px;}"
+                    "QComboBox QAbstractItemView{background-color:#222222; color:#FFFFFF; border:1px solid #444444; selection-background-color:#2D8CF0;}"
+                    "QHeaderView::section{background-color:#2A2A2A; color:#FFFFFF; border:1px solid #444444;}"
+                    "QCheckBox{color:#FFFFFF;}"
+                    "QCheckBox::indicator{width:16px;height:16px;border:1px solid #444444;border-radius:3px;background-color:#222222;}"
+                    "QCheckBox::indicator:checked{background-color:#2D8CF0;border-color:#2D8CF0;}";
+
+        progressStyle = "QProgressBar{border:none; border-radius:8px; height:26px; background-color:#222222; font-size:14px; font-weight:bold; color:#FFFFFF;}"
+                        "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7CE0); border-radius:8px;}";
     }
     this->setStyleSheet(mainStyle);
     m_dayProgressBar->setStyleSheet(progressStyle);
