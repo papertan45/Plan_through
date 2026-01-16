@@ -61,7 +61,7 @@ public:
     ~MainWindow();
     void initSettings();
     void saveSettings();
-    void applyTheme(int themeType);  
+    void applyTheme(int themeType);
     void setAutoStartup(bool isAuto);
 
 private slots:
@@ -82,7 +82,7 @@ private slots:
     void showWindowFromTray();
     void onAutoStartupChanged(int state);
     void onMinToTrayChanged(int state);
-    void onThemeChanged(int index); 
+    void onThemeChanged(int index);
     void openSavePath();
     void goToMsStoreRate();
 
@@ -136,7 +136,7 @@ private:
     QMenu *m_trayMenu = nullptr;
     bool m_isMinToTray = false;
     bool m_isAutoStartup = false;
-    int m_themeType = 0; 
+    int m_themeType = 0;
     QSettings *m_appSettings = nullptr;
     QString m_appDataPath;
 };
