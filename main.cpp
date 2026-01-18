@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     socket.connectToServer(SERVER_NAME);
     if(socket.waitForConnected(200))
     {
-        QMessageBox::warning(nullptr, "提示", "软件已在运行中", QMessageBox::Ok);
+        QMessageBox::warning(nullptr, "提示", "软件已在运行中，请双击托盘内图标打开", QMessageBox::Ok);
         return 0;
     }
 
