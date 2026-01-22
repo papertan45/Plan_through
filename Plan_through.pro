@@ -1,4 +1,5 @@
 QT       += core gui
+QT       += network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,11 +12,22 @@ CONFIG += c++17
 SOURCES += \
     appdatas.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    utils/datehelper.cpp \
+    utils/widgetcontainer.cpp \
+    widgets/dayview.cpp \
+    widgets/monthview.cpp \
+    widgets/timeaxis.cpp
 
 HEADERS += \
     appdatas.h \
-    mainwindow.h
+    datastruct.h \
+    mainwindow.h \
+    utils/datehelper.h \
+    utils/widgetcontainer.h \
+    widgets/dayview.h \
+    widgets/monthview.h \
+    widgets/timeaxis.h
 
 FORMS += \
     mainwindow.ui
@@ -30,3 +42,6 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 RC_ICONS = app.ico
+
+RESOURCES += \
+    res.qrc
