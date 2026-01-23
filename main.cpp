@@ -1,10 +1,10 @@
 #include <QApplication>
-#include <QMessageBox>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include "mainwindow.h"
 
 #define SERVER_NAME "PlanThrough_SingleInstance_Server"
+static MainWindow *g_mainWindow = nullptr;
 
 int main(int argc, char *argv[])
 {
@@ -15,20 +15,24 @@ int main(int argc, char *argv[])
     socket.connectToServer(SERVER_NAME);
     if(socket.waitForConnected(200))
     {
-        QMessageBox::warning(nullptr, "提示", "软件已在运行中，请双击托盘内图标打开", QMessageBox::Ok);
+        socket.close();
         return 0;
     }
 
     QLocalServer* server = new QLocalServer(&a);
-    // 每次有新连接，都断开并重新监听，永久占用服务名
     QObject::connect(server, &QLocalServer::newConnection, [=](){
         QLocalSocket *clientSocket = server->nextPendingConnection();
         clientSocket->close();
         clientSocket->deleteLater();
+        if(g_mainWindow)
+        {
+            g_mainWindow->showWindowFromTray();
+        }
     });
     server->listen(SERVER_NAME);
 
     MainWindow w;
+    g_mainWindow = &w;
     w.show();
 
     return a.exec();

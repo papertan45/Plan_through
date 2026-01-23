@@ -1,19 +1,33 @@
 QT       += core gui
+QT       += network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
-QT += network
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    appdatas.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    utils/datehelper.cpp \
+    utils/widgetcontainer.cpp \
+    widgets/dayview.cpp \
+    widgets/monthview.cpp \
+    widgets/timeaxis.cpp
 
 HEADERS += \
-    mainwindow.h
+    appdatas.h \
+    datastruct.h \
+    mainwindow.h \
+    utils/datehelper.h \
+    utils/widgetcontainer.h \
+    widgets/dayview.h \
+    widgets/monthview.h \
+    widgets/timeaxis.h
 
 FORMS += \
     mainwindow.ui
