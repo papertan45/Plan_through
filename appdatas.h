@@ -55,6 +55,7 @@ private:
     QString m_appDataPath;
     QString m_saveFilePath;
     QString m_configFilePath;
+    QString m_logDirectory; // 日志目录
 
     QMap<QDate, DateStudyData> m_studyDataMap;
     int m_studyTargetHour = 4;
@@ -64,6 +65,11 @@ private:
     bool m_isAutoStartup = false;
     bool m_isMinToTray = false;
     int m_themeType = 0;
+
+private:
+    void saveLog(); // 保存每日日志
+    void cleanupOldLogs(); // 清理超过一个月的日志
+    bool loadDataFromLogs(); // 从日志读取数据
 };
 
 extern AppDatas appDatas;

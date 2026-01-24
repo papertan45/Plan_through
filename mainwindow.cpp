@@ -101,6 +101,11 @@ void MainWindow::openSavePath()
     QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path()));
 }
 
+void MainWindow::openLogPath()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path("Log")));
+}
+
 void MainWindow::goToMsStoreRate()
 {
     QDesktopServices::openUrl(QUrl("https://apps.microsoft.com/detail/9P7X9B7RKXDB?hl=neutral&gl=CN&ocid=pdpshare"));
@@ -164,6 +169,13 @@ void MainWindow::showSettingsWindow()
     pathLayout->addStretch();
     connect(pathBtn, &QPushButton::clicked, this, &MainWindow::openSavePath);
 
+    QHBoxLayout *logLayout = new QHBoxLayout;
+    QPushButton *logBtn = new QPushButton("打开日志文件位置");
+    logBtn->setStyleSheet("background-color:#F59E0B;");
+    logLayout->addWidget(logBtn);
+    logLayout->addStretch();
+    connect(logBtn, &QPushButton::clicked, this, &MainWindow::openLogPath);
+
     QHBoxLayout *rateLayout = new QHBoxLayout;
     QPushButton *rateBtn = new QPushButton("微软商店好评支持一下吧 ❤️");
     rateBtn->setStyleSheet("background-color:#27AE60;");
@@ -174,6 +186,7 @@ void MainWindow::showSettingsWindow()
     mainLayout->addLayout(autoStartLayout);
     mainLayout->addLayout(minTrayLayout);
     mainLayout->addLayout(pathLayout);
+    mainLayout->addLayout(logLayout);
     mainLayout->addLayout(rateLayout);
     mainLayout->addStretch();
 

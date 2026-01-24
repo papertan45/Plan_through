@@ -59,6 +59,7 @@ private slots:
     void onMinToTrayChanged(int state);
     void onThemeChanged(int index);
     void openSavePath();
+    void openLogPath();
     void goToMsStoreRate();
 
 protected:
