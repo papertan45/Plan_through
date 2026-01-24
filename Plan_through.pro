@@ -23,6 +23,7 @@ HEADERS += \
     appdatas.h \
     datastruct.h \
     mainwindow.h \
+    clean.h \
     utils/datehelper.h \
     utils/widgetcontainer.h \
     widgets/dayview.h \

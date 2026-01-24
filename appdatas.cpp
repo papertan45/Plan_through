@@ -428,6 +428,10 @@ void AppDatas::initSettings()
 
     m_isMinToTray = m_appSettings->value("min_to_tray", false).toBool();
     m_themeType = m_appSettings->value("theme", 0).toInt();
+    
+    // 加载自动清理内存设置
+    m_isAutoCleanMemoryEnabled = m_appSettings->value("auto_clean_memory_enabled", true).toBool();
+    m_autoCleanMemoryThreshold = m_appSettings->value("auto_clean_memory_threshold", 80).toInt();
 }
 
 // 保存设置
@@ -436,6 +440,11 @@ void AppDatas::saveSettings()
     m_appSettings->setValue("auto_startup", m_isAutoStartup);
     m_appSettings->setValue("min_to_tray", m_isMinToTray);
     m_appSettings->setValue("theme", m_themeType);
+    
+    // 保存自动清理内存设置
+    m_appSettings->setValue("auto_clean_memory_enabled", m_isAutoCleanMemoryEnabled);
+    m_appSettings->setValue("auto_clean_memory_threshold", m_autoCleanMemoryThreshold);
+    
     m_appSettings->sync();
 }
 

@@ -5,6 +5,7 @@
 #include "widgets/monthview.h"
 #include "mainwindow.h"
 #include "appdatas.h"
+#include "clean.h"
 
 // 构造函数，初始化窗口和所有组件
 // 参数1：父窗口指针
@@ -15,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     initUI();
     applyTheme(appDatas.themeType());
     initSystemTray();
+    initMemoryMonitorTimer();
 
     findChild<DayView*>("dayView")->loadDateData(DateHelper::currentDate());
     findChild<DayView*>("dayView")->updateDayViewStats();
@@ -100,39 +102,39 @@ void MainWindow::initSystemTray()
 // 参数1：激活原因
 void MainWindow::onTrayIconClicked(QSystemTrayIcon::ActivationReason reason)
 {
-    if(reason == QSystemTrayIcon::DoubleClick) showWindowFromTray();
+    if(reason == QSystemTrayIcon::DoubleClick)
+    {
+        this->showWindowFromTray();
+    }
 }
 
-// 从系统托盘显示并激活窗口
+// 从系统托盘显示窗口
 void MainWindow::showWindowFromTray()
 {
-    this->showNormal();
-    this->raise();
+    this->show();
     this->activateWindow();
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QRect screenRect = screen->availableGeometry();
-    this->move(screenRect.center() - this->rect().center());
+    this->raise();
 }
 
-// 打开存档文件所在目录
-void MainWindow::openSavePath()
+// 切换到日视图
+void MainWindow::switchToDayView()
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path()));
+    m_mainStackedWidget->setCurrentIndex(0);
+    m_dayViewBtn->setChecked(true);
+    m_monthViewBtn->setChecked(false);
+    findChild<DayView*>("dayView")->updateDayViewStats();
 }
 
-// 打开日志文件所在目录
-void MainWindow::openLogPath()
+// 切换到月视图
+void MainWindow::switchToMonthView()
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path("Log")));
+    m_mainStackedWidget->setCurrentIndex(1);
+    m_monthViewBtn->setChecked(true);
+    m_dayViewBtn->setChecked(false);
+    findChild<MonthView*>("monthView")->generateMonthCalendar();
 }
 
-// 跳转到微软商店评分页面
-void MainWindow::goToMsStoreRate()
-{
-    QDesktopServices::openUrl(QUrl("https://apps.microsoft.com/detail/9P7X9B7RKXDB?hl=neutral&gl=CN&ocid=pdpshare"));
-}
-
-// 显示软件设置窗口
+// 显示设置窗口
 void MainWindow::showSettingsWindow()
 {
     QDialog *settingsDlg = new QDialog(this);
@@ -164,14 +166,14 @@ void MainWindow::showSettingsWindow()
     autoStartCb->setChecked(appDatas.isAutoStartup());
     autoStartLayout->addWidget(autoStartCb);
     autoStartLayout->addStretch();
-    connect(autoStartCb, &QCheckBox::stateChanged, this, &MainWindow::onAutoStartupChanged);
+    connect(autoStartCb, &QCheckBox::checkStateChanged, this, &MainWindow::onAutoStartupChanged);
 
     QHBoxLayout *minTrayLayout = new QHBoxLayout;
     QCheckBox *minTrayCb = new QCheckBox("关闭窗口后最小化到托盘");
     minTrayCb->setChecked(appDatas.isMinToTray());
     minTrayLayout->addWidget(minTrayCb);
     minTrayLayout->addStretch();
-    connect(minTrayCb, &QCheckBox::stateChanged, this, &MainWindow::onMinToTrayChanged);
+    connect(minTrayCb, &QCheckBox::checkStateChanged, this, &MainWindow::onMinToTrayChanged);
 
     QHBoxLayout *themeLayout = new QHBoxLayout;
     QLabel *themeLab = new QLabel("软件主题：");
@@ -182,7 +184,6 @@ void MainWindow::showSettingsWindow()
     themeLayout->addWidget(themeCbx);
     themeLayout->addStretch();
     connect(themeCbx, &QComboBox::currentIndexChanged, this, &MainWindow::onThemeChanged);
-    mainLayout->addLayout(themeLayout);
 
     QHBoxLayout *pathLayout = new QHBoxLayout;
     QPushButton *pathBtn = new QPushButton("打开存档文件位置");
@@ -205,10 +206,80 @@ void MainWindow::showSettingsWindow()
     rateLayout->addStretch();
     connect(rateBtn, &QPushButton::clicked, this, &MainWindow::goToMsStoreRate);
 
+    // 添加内存使用情况显示
+    QHBoxLayout *memoryInfoLayout = new QHBoxLayout;
+    QLabel *memoryInfoLabel = new QLabel(MemoryCleaner::getMemoryUsage());
+    memoryInfoLabel->setStyleSheet("font-size:10px; color:#666666;");
+    memoryInfoLayout->addWidget(memoryInfoLabel);
+    memoryInfoLayout->addStretch();
+
+    // 添加内存清理按钮
+    QHBoxLayout *cleanMemoryLayout = new QHBoxLayout;
+    QPushButton *cleanMemoryBtn = new QPushButton("清理系统内存");
+    cleanMemoryBtn->setStyleSheet("background-color:#EF4444;");
+    cleanMemoryLayout->addWidget(cleanMemoryBtn);
+    cleanMemoryLayout->addStretch();
+    connect(cleanMemoryBtn, &QPushButton::clicked, [=]() {
+        // 执行快速内存清理
+        MemoryCleaner::performFastSystemCleaning();
+        
+        // 更新内存使用情况
+        QString newMemoryInfo = MemoryCleaner::getMemoryUsage();
+        memoryInfoLabel->setText(newMemoryInfo);
+        
+        // 显示清理完成提示
+        QMessageBox::information(settingsDlg, "提示", "系统内存清理完成\n" + newMemoryInfo);
+    });
+    
+    // 添加自动清理设置
+    QHBoxLayout *autoCleanLayout = new QHBoxLayout;
+    QLabel *autoCleanLabel = new QLabel("自动清理：");
+    QCheckBox *autoCleanCheck = new QCheckBox("启用");
+    autoCleanCheck->setChecked(appDatas.isAutoCleanMemoryEnabled());
+    
+    QLabel *thresholdLabel = new QLabel("阈值：");
+    QComboBox *thresholdCombo = new QComboBox;
+    
+    // 添加阈值选项：30%, 40%, 50%, 60%, 70%, 80%, 90%
+    thresholdCombo->addItem("30%", 30);
+    thresholdCombo->addItem("40%", 40);
+    thresholdCombo->addItem("50%", 50);
+    thresholdCombo->addItem("60%", 60);
+    thresholdCombo->addItem("70%", 70);
+    thresholdCombo->addItem("80%", 80);
+    thresholdCombo->addItem("90%", 90);
+    
+    // 设置当前选中的阈值
+    int currentThreshold = appDatas.autoCleanMemoryThreshold();
+    int index = thresholdCombo->findData(currentThreshold);
+    if (index >= 0) {
+        thresholdCombo->setCurrentIndex(index);
+    } else {
+        thresholdCombo->setCurrentIndex(5); // 默认选中80%
+    }
+    
+    autoCleanLayout->addWidget(autoCleanLabel);
+    autoCleanLayout->addWidget(autoCleanCheck);
+    autoCleanLayout->addSpacing(10);
+    autoCleanLayout->addWidget(thresholdLabel);
+    autoCleanLayout->addWidget(thresholdCombo);
+    autoCleanLayout->addStretch();
+    
+    // 连接信号槽
+    connect(autoCleanCheck, &QCheckBox::checkStateChanged, this, &MainWindow::onAutoCleanEnabledChanged);
+    connect(thresholdCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) {
+        int threshold = thresholdCombo->itemData(index).toInt();
+        onAutoCleanThresholdChanged(threshold);
+    });
+
     mainLayout->addLayout(autoStartLayout);
     mainLayout->addLayout(minTrayLayout);
+    mainLayout->addLayout(themeLayout);
     mainLayout->addLayout(pathLayout);
     mainLayout->addLayout(logLayout);
+    mainLayout->addLayout(memoryInfoLayout);
+    mainLayout->addLayout(cleanMemoryLayout);
+    mainLayout->addLayout(autoCleanLayout);
     mainLayout->addLayout(rateLayout);
     mainLayout->addStretch();
 
@@ -218,14 +289,14 @@ void MainWindow::showSettingsWindow()
 
 // 自动启动设置改变事件处理
 // 参数1：复选框状态
-void MainWindow::onAutoStartupChanged(int state)
+void MainWindow::onAutoStartupChanged(Qt::CheckState state)
 {
     appDatas.setAutoStartup(state == Qt::Checked);
 }
 
 // 最小化到托盘设置改变事件处理
 // 参数1：复选框状态
-void MainWindow::onMinToTrayChanged(int state)
+void MainWindow::onMinToTrayChanged(Qt::CheckState state)
 {
     appDatas.setMinToTray(state == Qt::Checked);
 }
@@ -237,17 +308,82 @@ void MainWindow::onThemeChanged(int index)
     applyTheme(index);
 }
 
+// 打开存档文件位置
+void MainWindow::openSavePath()
+{
+    QString savePath = appDatas.path("Save");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(savePath).absolutePath()));
+}
+
+// 打开日志文件位置
+void MainWindow::openLogPath()
+{
+    QString logPath = appDatas.path("Log");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(logPath).absolutePath()));
+}
+
+// 跳转到微软商店评分页面
+void MainWindow::goToMsStoreRate()
+{
+    QDesktopServices::openUrl(QUrl("https://apps.microsoft.com/detail/9P7X9B7RKXDB?hl=neutral&gl=CN&ocid=pdpshare"));
+}
+
+// 初始化内存监控定时器
+void MainWindow::initMemoryMonitorTimer()
+{
+    m_memoryMonitorTimer = new QTimer(this);
+    
+    // 每隔5分钟检查一次内存使用情况
+    connect(m_memoryMonitorTimer, &QTimer::timeout, this, &MainWindow::checkMemoryUsage);
+    
+    // 启动定时器
+    m_memoryMonitorTimer->start(5 * 60 * 1000);
+    
+    // 立即执行一次检查
+    checkMemoryUsage();
+}
+
+// 定期检查内存使用情况
+void MainWindow::checkMemoryUsage()
+{
+    // 获取当前内存使用率
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    
+    if (GlobalMemoryStatusEx(&memInfo)) {
+        int currentUsage = memInfo.dwMemoryLoad;
+        int threshold = appDatas.autoCleanMemoryThreshold();
+        bool autoCleanEnabled = appDatas.isAutoCleanMemoryEnabled();
+        
+        // 如果内存使用率超过阈值且自动清理功能已启用，则执行清理
+        if (autoCleanEnabled && currentUsage >= threshold) {
+            MemoryCleaner::performFastSystemCleaning();
+        }
+    }
+}
+
+// 自动清理内存阈值改变事件处理
+// 参数1：新的阈值
+void MainWindow::onAutoCleanThresholdChanged(int threshold)
+{
+    appDatas.setAutoCleanMemoryThreshold(threshold);
+}
+
+// 自动清理开关改变事件处理
+// 参数1：检查状态
+void MainWindow::onAutoCleanEnabledChanged(Qt::CheckState state)
+{
+    appDatas.setAutoCleanMemoryEnabled(state == Qt::Checked);
+}
+
 // 窗口关闭事件处理
 // 参数1：关闭事件对象
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if(appDatas.isMinToTray())
-    {
-        this->hide();
+    if (appDatas.isMinToTray()) {
         event->ignore();
-    }
-    else
-    {
+        this->hide();
+    } else {
         event->accept();
     }
 }
@@ -298,22 +434,4 @@ void MainWindow::initUI()
 
     connect(m_dayViewBtn, &QPushButton::clicked, this, &MainWindow::switchToDayView);
     connect(m_monthViewBtn, &QPushButton::clicked, this, &MainWindow::switchToMonthView);
-}
-
-// 切换到日视图
-void MainWindow::switchToDayView()
-{
-    m_mainStackedWidget->setCurrentIndex(0);
-    m_dayViewBtn->setChecked(true);
-    m_monthViewBtn->setChecked(false);
-    findChild<DayView*>("dayView")->updateDayViewStats();
-}
-
-// 切换到月视图
-void MainWindow::switchToMonthView()
-{
-    m_mainStackedWidget->setCurrentIndex(1);
-    m_monthViewBtn->setChecked(true);
-    m_dayViewBtn->setChecked(false);
-    findChild<MonthView*>("monthView")->generateMonthCalendar();
 }

@@ -66,6 +66,14 @@ public:
     // 参数1：最大连续天数
     void setMaxContinDays(int continDays){m_maxContinuousDays = continDays;}
     
+    // 设置自动清理内存阈值
+    // 参数1：内存阈值百分比
+    void setAutoCleanMemoryThreshold(int threshold){m_autoCleanMemoryThreshold = threshold;}
+    
+    // 设置是否启用自动清理内存
+    // 参数1：是否启用自动清理
+    void setAutoCleanMemoryEnabled(bool enabled){m_isAutoCleanMemoryEnabled = enabled;}
+    
     // 重载[]运算符，用于访问指定日期的学习数据
     // 参数1：日期键
     // 返回：学习数据引用
@@ -97,6 +105,14 @@ public:
     // 返回：最大连续天数
     int maxContinDays(){return m_maxContinuousDays;}
     
+    // 获取自动清理内存阈值
+    // 返回：内存阈值百分比
+    int autoCleanMemoryThreshold(){return m_autoCleanMemoryThreshold;}
+    
+    // 获取是否启用自动清理内存
+    // 返回：是否启用自动清理
+    bool isAutoCleanMemoryEnabled(){return m_isAutoCleanMemoryEnabled;}
+    
     // 获取指定日期的学习数据
     // 参数1：日期键
     // 返回：学习数据
@@ -125,6 +141,10 @@ private:
     bool m_isAutoStartup = false;
     bool m_isMinToTray = false;
     int m_themeType = 0;
+    
+    // 自动清理内存相关设置
+    bool m_isAutoCleanMemoryEnabled = true; // 默认启用自动清理
+    int m_autoCleanMemoryThreshold = 80; // 默认内存使用率超过80%时清理
 
 private:
     // 保存每日日志

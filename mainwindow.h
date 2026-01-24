@@ -37,6 +37,7 @@
 #include <QCloseEvent>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QTimer>
 #include "widgets/dayview.h"
 #include "widgets/monthview.h"
 
@@ -75,11 +76,11 @@ private slots:
     
     // 自动启动设置改变事件处理
     // 参数1：复选框状态
-    void onAutoStartupChanged(int state);
+    void onAutoStartupChanged(Qt::CheckState state);
     
     // 最小化到托盘设置改变事件处理
     // 参数1：复选框状态
-    void onMinToTrayChanged(int state);
+    void onMinToTrayChanged(Qt::CheckState state);
     
     // 主题设置改变事件处理
     // 参数1：主题索引
@@ -93,6 +94,17 @@ private slots:
     
     // 跳转到微软商店评分页面
     void goToMsStoreRate();
+    
+    // 定期检查内存使用情况
+    void checkMemoryUsage();
+    
+    // 自动清理内存阈值改变事件处理
+    // 参数1：新的阈值
+    void onAutoCleanThresholdChanged(int threshold);
+    
+    // 自动清理开关改变事件处理
+    // 参数1：检查状态
+    void onAutoCleanEnabledChanged(Qt::CheckState state);
 
 protected:
     // 窗口关闭事件处理
@@ -105,6 +117,9 @@ private:
     
     // 初始化系统托盘
     void initSystemTray();
+    
+    // 初始化内存监控定时器
+    void initMemoryMonitorTimer();
 
 private:
     QPushButton *m_dayViewBtn = nullptr;
@@ -114,6 +129,9 @@ private:
 
     QSystemTrayIcon *m_systemTrayIcon = nullptr;
     QMenu *m_trayMenu = nullptr;
+    
+    // 内存监控定时器
+    QTimer *m_memoryMonitorTimer = nullptr;
 
     DayView* m_dayView = nullptr;
     MonthView* m_monthView = nullptr;
