@@ -11,51 +11,111 @@
 #include <QApplication>
 #include <QStandardPaths>
 
-/**
- * @brief The AppDatas class
- * 负责用户数据读取与存储。
- */
+// 应用数据管理类，负责用户数据读取与存储
 class AppDatas
 {
 public:
+    // 构造函数，初始化应用数据管理
     AppDatas();
+    
+    // 析构函数，释放资源并保存数据
     ~AppDatas();
-
+    
+    // 初始化存档路径
     void initSavePath();
+    
+    // 初始化配置文件
     void initConfigFile();
+    
+    // 初始化设置
     void initSettings();
-
+    
+    // 从文件加载配置
     void loadConfigFromFile();
+    
+    // 从文件加载数据
     void loadDataFromFile();
-
+    
+    // 保存配置到文件
     void saveConfigToFile();
+    
+    // 保存数据到文件
     void saveDataToFile();
+    
+    // 保存设置
     void saveSettings();
 
 public:
+    // 设置是否自动启动
+    // 参数1：是否自动启动
     void setAutoStartup(bool isAuto);
+    
+    // 设置是否最小化到托盘
+    // 参数1：是否最小化到托盘
     void setMinToTray(bool isMinToTray){m_isMinToTray = isMinToTray;}
+    
+    // 设置主题类型
+    // 参数1：主题类型
     void setTheme(int themeType){m_themeType = themeType;}
+    
+    // 设置学习目标小时数
+    // 参数1：学习目标小时数
     void setTargetHour(int targetHour){m_studyTargetHour = targetHour;}
+    
+    // 设置最大连续天数
+    // 参数1：最大连续天数
     void setMaxContinDays(int continDays){m_maxContinuousDays = continDays;}
+    
+    // 重载[]运算符，用于访问指定日期的学习数据
+    // 参数1：日期键
+    // 返回：学习数据引用
     DateStudyData& operator[](const QDate& key){return m_studyDataMap[key];}
 
 public:
+    // 获取指定类型的路径
+    // 参数1：路径类型，支持"Root"、"Save"、"Config"、"Log"
+    // 返回：路径字符串
     const QString& path(QString type = "Root");
+    
+    // 获取是否自动启动
+    // 返回：是否自动启动
     bool isAutoStartup(){return m_isAutoStartup;}
+    
+    // 获取是否最小化到托盘
+    // 返回：是否最小化到托盘
     bool isMinToTray(){return m_isMinToTray;}
+    
+    // 获取主题类型
+    // 返回：主题类型
     int themeType(){return m_themeType;}
+    
+    // 获取学习目标小时数
+    // 返回：学习目标小时数
     int targetHour(){return m_studyTargetHour;}
+    
+    // 获取最大连续天数
+    // 返回：最大连续天数
     int maxContinDays(){return m_maxContinuousDays;}
+    
+    // 获取指定日期的学习数据
+    // 参数1：日期键
+    // 返回：学习数据
     DateStudyData value(const QDate& key){return m_studyDataMap.value(key);}
+    
+    // 检查是否包含指定日期的数据
+    // 参数1：日期键
+    // 返回：是否包含
     bool contains(const QDate& key){return m_studyDataMap.contains(key);}
+    
+    // 计算连续学习天数
+    // 返回：连续学习天数
     int calculateContinuousDays();
 
 private:
     QString m_appDataPath;
     QString m_saveFilePath;
     QString m_configFilePath;
-    QString m_logDirectory; // 日志目录
+    QString m_logDirectory;
 
     QMap<QDate, DateStudyData> m_studyDataMap;
     int m_studyTargetHour = 4;
@@ -67,9 +127,15 @@ private:
     int m_themeType = 0;
 
 private:
-    void saveLog(); // 保存每日日志
-    void cleanupOldLogs(); // 清理超过一个月的日志
-    bool loadDataFromLogs(); // 从日志读取数据
+    // 保存每日日志
+    void saveLog();
+    
+    // 清理旧日志
+    void cleanupOldLogs();
+    
+    // 从日志读取数据
+    // 返回：是否成功
+    bool loadDataFromLogs();
 };
 
 extern AppDatas appDatas;

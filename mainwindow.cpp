@@ -6,6 +6,8 @@
 #include "mainwindow.h"
 #include "appdatas.h"
 
+// 构造函数，初始化窗口和所有组件
+// 参数1：父窗口指针
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -19,14 +21,26 @@ MainWindow::MainWindow(QWidget *parent)
     findChild<MonthView*>("monthView")->generateMonthCalendar();
 
     if (appDatas.isAutoStartup()) {
-        this->hide();  // 隐藏主窗口
+        this->hide();
     }
 }
 
+// 析构函数，释放所有动态分配的资源
 MainWindow::~MainWindow()
 {
+    if (m_systemTrayIcon) {
+        m_systemTrayIcon->hide();
+        delete m_systemTrayIcon;
+        m_systemTrayIcon = nullptr;
+    }
+    if (m_trayMenu) {
+        delete m_trayMenu;
+        m_trayMenu = nullptr;
+    }
 }
 
+// 应用主题样式
+// 参数1：主题类型，0表示默认主题，1表示深色主题等
 void MainWindow::applyTheme(int themeType)
 {
     appDatas.setTheme(themeType);
@@ -54,6 +68,7 @@ void MainWindow::applyTheme(int themeType)
     findChild<DayView*>("dayView")->updateDayViewStats();
 }
 
+// 初始化系统托盘
 void MainWindow::initSystemTray()
 {
     m_systemTrayIcon = new QSystemTrayIcon(this);
@@ -81,41 +96,48 @@ void MainWindow::initSystemTray()
     connect(m_systemTrayIcon, &QSystemTrayIcon::activated, this, &MainWindow::onTrayIconClicked);
 }
 
+// 系统托盘图标点击事件处理
+// 参数1：激活原因
 void MainWindow::onTrayIconClicked(QSystemTrayIcon::ActivationReason reason)
 {
     if(reason == QSystemTrayIcon::DoubleClick) showWindowFromTray();
 }
 
+// 从系统托盘显示并激活窗口
 void MainWindow::showWindowFromTray()
 {
-    this->showNormal();        // 从最小化/隐藏状态恢复正常窗口
-    this->raise();             // 窗口置顶
-    this->activateWindow();    // 激活窗口获取焦点
+    this->showNormal();
+    this->raise();
+    this->activateWindow();
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenRect = screen->availableGeometry();
-    this->move(screenRect.center() - this->rect().center()); // 窗口居中屏幕
+    this->move(screenRect.center() - this->rect().center());
 }
 
+// 打开存档文件所在目录
 void MainWindow::openSavePath()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path()));
 }
 
+// 打开日志文件所在目录
 void MainWindow::openLogPath()
 {
     QDesktopServices::openUrl(QUrl::fromLocalFile(appDatas.path("Log")));
 }
 
+// 跳转到微软商店评分页面
 void MainWindow::goToMsStoreRate()
 {
     QDesktopServices::openUrl(QUrl("https://apps.microsoft.com/detail/9P7X9B7RKXDB?hl=neutral&gl=CN&ocid=pdpshare"));
 }
 
+// 显示软件设置窗口
 void MainWindow::showSettingsWindow()
 {
     QDialog *settingsDlg = new QDialog(this);
     settingsDlg->setWindowTitle("软件设置");
-    settingsDlg->setFixedSize(380, 280); // 高度从220改为280，容纳主题选项
+    settingsDlg->setFixedSize(380, 280);
     settingsDlg->setModal(true);
 
     settingsDlg->setStyleSheet(
@@ -194,21 +216,29 @@ void MainWindow::showSettingsWindow()
     appDatas.saveSettings();
 }
 
+// 自动启动设置改变事件处理
+// 参数1：复选框状态
 void MainWindow::onAutoStartupChanged(int state)
 {
     appDatas.setAutoStartup(state == Qt::Checked);
 }
 
+// 最小化到托盘设置改变事件处理
+// 参数1：复选框状态
 void MainWindow::onMinToTrayChanged(int state)
 {
     appDatas.setMinToTray(state == Qt::Checked);
 }
 
+// 主题设置改变事件处理
+// 参数1：主题索引
 void MainWindow::onThemeChanged(int index)
 {
     applyTheme(index);
 }
 
+// 窗口关闭事件处理
+// 参数1：关闭事件对象
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if(appDatas.isMinToTray())
@@ -222,15 +252,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
+// 初始化用户界面
 void MainWindow::initUI()
 {
-    this->resize(500, 600);  // 主窗口尺寸紧凑缩小
+    this->resize(500, 600);
 
     QWidget* centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setContentsMargins(12, 12, 12, 12);  // 全局内边距大幅缩减
-    mainLayout->setSpacing(10);                      // 全局主间距紧凑
+    mainLayout->setContentsMargins(12, 12, 12, 12);
+    mainLayout->setSpacing(10);
 
     QHBoxLayout* topTabLayout = new QHBoxLayout;
     m_dayViewBtn = new QPushButton("日视图");
@@ -269,6 +300,7 @@ void MainWindow::initUI()
     connect(m_monthViewBtn, &QPushButton::clicked, this, &MainWindow::switchToMonthView);
 }
 
+// 切换到日视图
 void MainWindow::switchToDayView()
 {
     m_mainStackedWidget->setCurrentIndex(0);
@@ -277,6 +309,7 @@ void MainWindow::switchToDayView()
     findChild<DayView*>("dayView")->updateDayViewStats();
 }
 
+// 切换到月视图
 void MainWindow::switchToMonthView()
 {
     m_mainStackedWidget->setCurrentIndex(1);

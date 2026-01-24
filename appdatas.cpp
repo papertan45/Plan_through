@@ -2,6 +2,7 @@
 
 AppDatas appDatas;
 
+// 构造函数，初始化应用数据管理
 AppDatas::AppDatas() {
     m_appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/Plan_through";
     m_appSettings = new QSettings(m_appDataPath + "/app_settings.ini", QSettings::IniFormat);
@@ -10,18 +11,25 @@ AppDatas::AppDatas() {
     initConfigFile();
     initSettings();
 
-    cleanupOldLogs(); // 启动时清理旧日志
+    cleanupOldLogs();
 
     loadDataFromFile();
     loadConfigFromFile();
 }
 
+// 析构函数，释放资源并保存数据
 AppDatas::~AppDatas(){
     saveDataToFile();
     saveConfigToFile();
     saveSettings();
+    
+    if (m_appSettings) {
+        delete m_appSettings;
+        m_appSettings = nullptr;
+    }
 }
 
+// 初始化存档路径
 void AppDatas::initSavePath()
 {
     QDir dir(m_appDataPath);
@@ -32,7 +40,6 @@ void AppDatas::initSavePath()
     m_saveFilePath = m_appDataPath + "/study_data.json";
     m_logDirectory = m_appDataPath + "/logs";
     
-    // 创建日志目录
     QDir logDir(m_logDirectory);
     if(!logDir.exists())
     {
@@ -45,6 +52,7 @@ void AppDatas::initSavePath()
     qDebug() << "当前日志目录：" << m_logDirectory;
 }
 
+// 初始化配置文件
 void AppDatas::initConfigFile()
 {
     QDir dir(m_appDataPath);
@@ -56,6 +64,7 @@ void AppDatas::initConfigFile()
     qDebug() << "当前配置文件存档路径：" << m_configFilePath;
 }
 
+// 保存配置到文件
 void AppDatas::saveConfigToFile()
 {
     QJsonObject rootObj;
@@ -68,6 +77,7 @@ void AppDatas::saveConfigToFile()
     file.close();
 }
 
+// 从文件加载配置
 void AppDatas::loadConfigFromFile()
 {
     QFile file(m_configFilePath);
@@ -87,6 +97,7 @@ void AppDatas::loadConfigFromFile()
     }
 }
 
+// 保存数据到文件
 void AppDatas::saveDataToFile()
 {
     QJsonObject rootObj;
@@ -170,9 +181,9 @@ void AppDatas::saveDataToFile()
     saveLog();
 }
 
+// 保存每日日志
 void AppDatas::saveLog()
 {
-    // 日志文件名格式：YYYY-MM-DD.json
     QString logFileName = QDate::currentDate().toString("yyyy-MM-dd") + ".json";
     QString logFilePath = m_logDirectory + "/" + logFileName;
     
@@ -180,7 +191,6 @@ void AppDatas::saveLog()
     rootObj.insert("maxContinuousDays", m_maxContinuousDays);
     QJsonObject dateObj;
     
-    // 只保存当天的数据到日志
     QDate currentDate = QDate::currentDate();
     if (m_studyDataMap.contains(currentDate)) {
         const DateStudyData& data = m_studyDataMap[currentDate];
@@ -226,17 +236,17 @@ void AppDatas::saveLog()
     cleanupOldLogs();
 }
 
+// 清理旧日志
 void AppDatas::cleanupOldLogs()
 {
     QDir logDir(m_logDirectory);
     QFileInfoList logFiles = logDir.entryInfoList(QStringList() << "*.json", QDir::Files);
     
     QDate currentDate = QDate::currentDate();
-    int daysToKeep = 30; // 保留30天的日志
+    int daysToKeep = 30;
     
     foreach (const QFileInfo& fileInfo, logFiles) {
         QString fileName = fileInfo.fileName();
-        // 提取日期部分，格式：YYYY-MM-DD.json
         QString dateStr = fileName.left(10);
         QDate logDate = QDate::fromString(dateStr, "yyyy-MM-dd");
         
@@ -254,6 +264,8 @@ void AppDatas::cleanupOldLogs()
     }
 }
 
+// 从日志读取数据
+// 返回：是否成功
 bool AppDatas::loadDataFromLogs()
 {
     QDir logDir(m_logDirectory);
@@ -343,6 +355,7 @@ bool AppDatas::loadDataFromLogs()
     return loaded;
 }
 
+// 从文件加载数据
 void AppDatas::loadDataFromFile()
 {
     QFile file(m_saveFilePath);
@@ -407,6 +420,7 @@ void AppDatas::loadDataFromFile()
     }
 }
 
+// 初始化设置
 void AppDatas::initSettings()
 {
     m_isAutoStartup = m_appSettings->value("auto_startup", false).toBool();
@@ -416,6 +430,7 @@ void AppDatas::initSettings()
     m_themeType = m_appSettings->value("theme", 0).toInt();
 }
 
+// 保存设置
 void AppDatas::saveSettings()
 {
     m_appSettings->setValue("auto_startup", m_isAutoStartup);
@@ -424,6 +439,8 @@ void AppDatas::saveSettings()
     m_appSettings->sync();
 }
 
+// 设置是否自动启动
+// 参数1：是否自动启动
 void AppDatas::setAutoStartup(bool isAuto)
 {
     m_isAutoStartup = isAuto;
@@ -433,6 +450,9 @@ void AppDatas::setAutoStartup(bool isAuto)
     else reg.remove("PlanThrough");
 }
 
+// 获取指定类型的路径
+// 参数1：路径类型，支持"Root"、"Save"、"Config"、"Log"
+// 返回：路径字符串
 const QString& AppDatas::path(QString type){
     return type=="Root"?m_appDataPath:
                type=="Save"?m_saveFilePath:
@@ -441,6 +461,8 @@ const QString& AppDatas::path(QString type){
                m_appDataPath;
 }
 
+// 计算连续学习天数
+// 返回：连续学习天数
 int AppDatas::calculateContinuousDays()
 {
     int days = 0;
