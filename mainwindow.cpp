@@ -146,18 +146,16 @@ void MainWindow::showSettingsWindow()
     minTrayLayout->addStretch();
     connect(minTrayCb, &QCheckBox::stateChanged, this, &MainWindow::onMinToTrayChanged);
 
-    // ======================== 新增：主题切换选项 开始 ========================
     QHBoxLayout *themeLayout = new QHBoxLayout;
     QLabel *themeLab = new QLabel("软件主题：");
     QComboBox *themeCbx = new QComboBox;
-    themeCbx->addItems({"简约灰（推荐）", "纯净白"});
+    themeCbx->addItems({"简约灰", "纯净白"});
     themeCbx->setCurrentIndex(appDatas.themeType());
     themeLayout->addWidget(themeLab);
     themeLayout->addWidget(themeCbx);
     themeLayout->addStretch();
     connect(themeCbx, &QComboBox::currentIndexChanged, this, &MainWindow::onThemeChanged);
     mainLayout->addLayout(themeLayout);
-    // ======================== 新增：主题切换选项 结束 ========================
 
     QHBoxLayout *pathLayout = new QHBoxLayout;
     QPushButton *pathBtn = new QPushButton("打开存档文件位置");

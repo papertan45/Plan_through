@@ -3,7 +3,7 @@
 AppDatas appDatas;
 
 AppDatas::AppDatas() {
-    m_appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    m_appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/Plan_through";
     m_appSettings = new QSettings(m_appDataPath + "/app_settings.ini", QSettings::IniFormat);
 
     initSavePath();
@@ -134,11 +134,26 @@ void AppDatas::saveDataToFile()
         return;
     }
 
-    QFile::remove(m_saveFilePath);
+    if (QFile::exists(m_saveFilePath)) {
+        QString backupFilePath = m_saveFilePath + ".bak";
+        QFile::remove(backupFilePath);
+        if (!QFile::rename(m_saveFilePath, backupFilePath)) {
+            qWarning() << "创建备份文件失败";
+            QFile::remove(tempFilePath);
+            return;
+        }
+    }
+    
     if (!QFile::rename(tempFilePath, m_saveFilePath)) {
         qWarning() << "覆盖存档文件失败";
         QFile::remove(tempFilePath);
+        if (QFile::exists(m_saveFilePath + ".bak")) {
+            QFile::rename(m_saveFilePath + ".bak", m_saveFilePath);
+        }
+        return;
     }
+    
+    QFile::remove(m_saveFilePath + ".bak");
 }
 
 void AppDatas::loadDataFromFile()
