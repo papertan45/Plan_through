@@ -7,20 +7,15 @@
 #include <QDebug>
 #include <tlhelp32.h>
 
-// 移除MinGW不支持的pragma comment
-
-// 定义系统信息类常量
 #ifndef SystemMemoryListInformation
 #define SystemMemoryListInformation 85 // Windows 10/11 正确值
 #endif
 
 
 
-// 定义内存清理命令枚举
 #define MEMORY_CLEAN_COMMAND_EMPTY_WORKING_SETS             L"EmptyWorkingSets"
 #define MEMORY_CLEAN_COMMAND_EMPTY_STANDBY_LIST             L"EmptyStandbyList"
 
-// 定义内存列表命令结构体
 typedef struct _SYSTEM_MEMORY_LIST_COMMAND {
     const wchar_t* Command;
     HANDLE ProcessHandle;
@@ -77,5 +72,6 @@ private:
     // 强制关闭不必要的进程
     static void forceCloseUnnecessaryProcesses();
 };
+
 
 #endif // CLEAN_H
