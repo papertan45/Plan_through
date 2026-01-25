@@ -62,10 +62,6 @@ public:
     // 参数1：学习目标小时数
     void setTargetHour(int targetHour){m_studyTargetHour = targetHour;}
     
-    // 设置最大连续天数
-    // 参数1：最大连续天数
-    void setMaxContinDays(int continDays){m_maxContinuousDays = continDays;}
-    
     // 设置自动清理内存阈值
     // 参数1：内存阈值百分比
     void setAutoCleanMemoryThreshold(int threshold){m_autoCleanMemoryThreshold = threshold;}
@@ -73,6 +69,10 @@ public:
     // 设置是否启用自动清理内存
     // 参数1：是否启用自动清理
     void setAutoCleanMemoryEnabled(bool enabled){m_isAutoCleanMemoryEnabled = enabled;}
+    
+    // 设置最大连续天数
+    // 参数1：最大连续天数
+    void setMaxContinDays(int continDays){m_maxContinuousDays = continDays;}
     
     // 重载[]运算符，用于访问指定日期的学习数据
     // 参数1：日期键
@@ -126,6 +126,45 @@ public:
     // 计算连续学习天数
     // 返回：连续学习天数
     int calculateContinuousDays();
+    
+    // 创建数据备份
+    // 参数1：备份文件路径
+    // 返回：是否成功
+    bool createBackup(const QString& backupPath);
+    
+    // 从备份恢复数据
+    // 参数1：备份文件路径
+    // 返回：是否成功
+    bool restoreFromBackup(const QString& backupPath);
+    
+    // 获取总学习天数
+    // 返回：总学习天数
+    int getTotalStudyDays() const;
+    
+    // 获取总学习时长（小时）
+    // 返回：总学习时长
+    int getTotalStudyHours() const;
+    
+    // 获取平均每天学习时长（小时）
+    // 返回：平均每天学习时长
+    double getAverageStudyHoursPerDay() const;
+    
+    // 获取总项目数
+    // 返回：总项目数
+    int getTotalProjects() const;
+    
+    // 获取完成项目数
+    // 返回：完成项目数
+    int getCompletedProjects() const;
+    
+    // 获取项目完成率（百分比）
+    // 返回：项目完成率
+    double getProjectCompletionRate() const;
+    
+    // 获取最近N天的学习数据
+    // 参数1：天数
+    // 返回：最近N天的学习数据，键为日期，值为学习数据
+    QMap<QDate, DateStudyData> getRecentStudyData(int days) const;
 
 private:
     QString m_appDataPath;

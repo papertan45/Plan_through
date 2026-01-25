@@ -38,6 +38,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QTimer>
+#include <QFileDialog>
 #include "widgets/dayview.h"
 #include "widgets/monthview.h"
 

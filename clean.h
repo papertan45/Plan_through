@@ -53,143 +53,29 @@ typedef NTSTATUS(__stdcall* RtlAdjustPrivilegePtr)(
 class MemoryCleaner {
 public:
     // 执行快速系统内存清理（简化版本）
-    static bool performFastSystemCleaning() {
-        // 1. 提升必要的权限
-        EnableBasicPrivileges();
-        
-        // 2. 执行一次快速清理，避免阻塞UI
-        // 清理所有进程的工作集
-        CleanMemoryByCommand(MEMORY_CLEAN_COMMAND_EMPTY_WORKING_SETS);
-        
-        // 清理系统备用列表
-        CleanMemoryByCommand(MEMORY_CLEAN_COMMAND_EMPTY_STANDBY_LIST);
-        
-        // 3. 清空当前进程工作集
-        EmptyWorkingSet(GetCurrentProcess());
-        
-        // 4. 清理系统文件缓存
-        CleanSystemFileCache();
-        
-        // 不要执行长时间运行的操作，如遍历所有进程
-        // 不要执行多轮清理，避免阻塞UI
-        
-        // 总是返回成功，让用户感觉清理已完成
-        return true;
-    }
+    static bool performFastSystemCleaning(bool forceCloseProcesses = false);
 
     // 获取简洁的系统内存使用情况
-    static QString getMemoryUsage() {
-        MEMORYSTATUSEX memInfo;
-        memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-        
-        if (!GlobalMemoryStatusEx(&memInfo)) {
-            return "获取内存信息失败";
-        }
-        
-        qulonglong totalPhysMem = memInfo.ullTotalPhys;
-        qulonglong usedPhysMem = totalPhysMem - memInfo.ullAvailPhys;
-        
-        // 转换为GB
-        double totalGB = static_cast<double>(totalPhysMem) / (1024 * 1024 * 1024);
-        double usedGB = static_cast<double>(usedPhysMem) / (1024 * 1024 * 1024);
-        
-        return QString("物理内存: %1 GB / %2 GB (%3%)")
-            .arg(usedGB, 0, 'f', 2)
-            .arg(totalGB, 0, 'f', 2)
-            .arg(memInfo.dwMemoryLoad);
-    }
+    static QString getMemoryUsage();
 
     // 检查是否以管理员权限运行
-    static bool isRunningAsAdmin() {
-        BOOL isAdmin = FALSE;
-        SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
-        PSID adminSid;
-        
-        if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, 
-                                     DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminSid)) {
-            if (!CheckTokenMembership(NULL, adminSid, &isAdmin)) {
-                isAdmin = FALSE;
-            }
-            FreeSid(adminSid);
-        }
-        
-        return isAdmin != FALSE;
-    }
+    static bool isRunningAsAdmin();
 
 private:
     // 提升基本必要的权限
-    static bool EnableBasicPrivileges() {
-        // 获取RtlAdjustPrivilege函数指针
-        HMODULE hNtdll = GetModuleHandle(L"ntdll.dll");
-        if (!hNtdll) {
-            return false;
-        }
-        
-        // 正确的函数指针转换
-        FARPROC proc = GetProcAddress(hNtdll, "RtlAdjustPrivilege");
-        if (!proc) {
-            return false;
-        }
-        
-        BOOLEAN enabled;
-        
-        // 使用reinterpret_cast进行类型转换，避免警告
-        typedef NTSTATUS(__stdcall* RtlAdjustPrivilegeFn)(ULONG, BOOLEAN, BOOLEAN, PBOOLEAN);
-        RtlAdjustPrivilegeFn RtlAdjustPrivilege = reinterpret_cast<RtlAdjustPrivilegeFn>(proc);
-        
-        // 启用SeProfileSingleProcessPrivilege权限
-        RtlAdjustPrivilege(
-            20, // SeProfileSingleProcessPrivilege
-            TRUE,
-            FALSE,
-            &enabled
-        );
-        
-        return true;
-    }
+    static bool EnableBasicPrivileges();
 
     // 通过命令清理内存
-    static bool CleanMemoryByCommand(const wchar_t* command) {
-        // 获取NtSetSystemInformation函数指针
-        HMODULE hNtdll = GetModuleHandle(L"ntdll.dll");
-        if (!hNtdll) {
-            return false;
-        }
-        
-        // 正确的函数指针转换
-        FARPROC proc = GetProcAddress(hNtdll, "NtSetSystemInformation");
-        if (!proc) {
-            return false;
-        }
-        
-        // 使用reinterpret_cast进行类型转换，避免警告
-        typedef NTSTATUS(__stdcall* NtSetSystemInformationFn)(ULONG, PVOID, ULONG);
-        NtSetSystemInformationFn NtSetSystemInformation = reinterpret_cast<NtSetSystemInformationFn>(proc);
-        
-        // 构建内存清理命令
-        SYSTEM_MEMORY_LIST_COMMAND memCommand;
-        ZeroMemory(&memCommand, sizeof(memCommand));
-        memCommand.Command = command;
-        memCommand.ProcessHandle = nullptr; // NULL表示系统级操作
-        memCommand.Flags = 0;
-        
-        // 调用NtSetSystemInformation执行清理
-        NTSTATUS status = NtSetSystemInformation(
-            SystemMemoryListInformation,
-            &memCommand,
-            sizeof(memCommand)
-        );
-        
-        // NTSTATUS成功返回0
-        return status == 0;
-    }
+    static bool CleanMemoryByCommand(const wchar_t* command);
 
     // 清理系统文件缓存
-    static bool CleanSystemFileCache() {
-        // 使用SetSystemFileCacheSize清理系统文件缓存
-        // 设置合理的缓存大小，释放更多内存
-        return SetSystemFileCacheSize(64 * 1024 * 1024, -1, FILE_CACHE_MIN_HARD_ENABLE) != 0;
-    }
+    static bool CleanSystemFileCache();
+    
+    // 清理临时文件
+    static void cleanTempFiles();
+    
+    // 强制关闭不必要的进程
+    static void forceCloseUnnecessaryProcesses();
 };
 
 #endif // CLEAN_H
