@@ -7,8 +7,6 @@
 #include "appdatas.h"
 #include "clean.h"
 
-// 构造函数，初始化窗口和所有组件
-// 参数1：父窗口指针
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -319,7 +317,7 @@ void MainWindow::openSavePath()
 void MainWindow::openLogPath()
 {
     QString logPath = appDatas.path("Log");
-    QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(logPath).absolutePath()));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(logPath));
 }
 
 // 跳转到微软商店评分页面

@@ -243,7 +243,7 @@ void AppDatas::cleanupOldLogs()
     QFileInfoList logFiles = logDir.entryInfoList(QStringList() << "*.json", QDir::Files);
     
     QDate currentDate = QDate::currentDate();
-    int daysToKeep = 30;
+    int daysToKeep = 7;
     
     foreach (const QFileInfo& fileInfo, logFiles) {
         QString fileName = fileInfo.fileName();
