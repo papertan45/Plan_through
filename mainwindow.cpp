@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     findChild<DayView*>("dayView")->loadDateData(DateHelper::currentDate());
     findChild<DayView*>("dayView")->updateDayViewStats();
     findChild<MonthView*>("monthView")->generateMonthCalendar();
-    
+
     // 默认显示月视图
     switchToMonthView();
 
@@ -49,7 +49,7 @@ void MainWindow::applyTheme(int themeType)
 {
     appDatas.setTheme(themeType);
     QString mainStyle, progressStyle;
-    
+
     // 根据主题类型设置不同的样式
     if (themeType == 0) {
         mainStyle = "QMainWindow{background-color: #F5F7FA;border: none;}"
@@ -66,7 +66,7 @@ void MainWindow::applyTheme(int themeType)
         progressStyle = "QProgressBar{border:none; border-radius:6px; height:22px; background-color:#F0F0F0; font-size:12px; font-weight:bold; color:#333333;}"
                         "QProgressBar::chunk{background-color:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #2D8CF0,stop:1 #1D7CE0); border-radius:6px;}";
     }
-    
+
     this->setStyleSheet(mainStyle);
     findChild<DayView*>("dayView")->setProgressStyle(progressStyle);
     findChild<DayView*>("dayView")->updateDayViewStats();
@@ -123,19 +123,213 @@ void MainWindow::showWindowFromTray()
 // 切换到日视图
 void MainWindow::switchToDayView()
 {
-    m_mainStackedWidget->setCurrentIndex(0);
-    m_dayViewBtn->setChecked(true);
-    m_monthViewBtn->setChecked(false);
-    findChild<DayView*>("dayView")->updateDayViewStats();
+    if (m_isAnimating) {
+        return;
+    }
+    
+    if (m_mainStackedWidget->currentIndex() == 0) {
+        // 已经在日视图，确保按钮状态正确
+        m_dayViewBtn->setChecked(true);
+        m_monthViewBtn->setChecked(false);
+        findChild<DayView*>("dayView")->updateDayViewStats();
+        return;
+    }
+    
+    m_isAnimating = true;
+    
+    QWidget *currentWidget = m_mainStackedWidget->currentWidget();
+    if (!currentWidget) {
+        m_isAnimating = false;
+        return;
+    }
+    
+    QPoint originalPos = currentWidget->pos();
+    
+    // 月视图→日视图：月视图向右滑出
+    QPoint targetPos = originalPos + QPoint(60, 0);
+    
+    // 创建退出动画 - 只执行一半（快→慢阶段）
+    QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
+    
+    QPropertyAnimation *fadeOutAnim = new QPropertyAnimation(currentWidget, "windowOpacity");
+    fadeOutAnim->setDuration(250); // 总动画时长的一半
+    fadeOutAnim->setEasingCurve(QEasingCurve::InOutCubic); // 快→慢→快的缓动曲线
+    fadeOutAnim->setStartValue(1.0);
+    fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
+    
+    QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
+    slideOutAnim->setDuration(250);
+    slideOutAnim->setEasingCurve(QEasingCurve::InOutCubic);
+    slideOutAnim->setStartValue(originalPos);
+    slideOutAnim->setEndValue(QPoint(originalPos.x() + 30, originalPos.y())); // 只滑动一半距离
+    
+    exitGroup->addAnimation(fadeOutAnim);
+    exitGroup->addAnimation(slideOutAnim);
+    
+    connect(exitGroup, &QParallelAnimationGroup::finished, this, [=]() {
+        // 在速度最快时（动画中点）切换页面
+        m_mainStackedWidget->setCurrentIndex(0);
+        
+        // 恢复当前控件状态
+        currentWidget->move(originalPos);
+        currentWidget->setWindowOpacity(1.0);
+        
+        QWidget *newWidget = m_mainStackedWidget->currentWidget();
+        if (!newWidget) {
+            m_isAnimating = false;
+            return;
+        }
+        
+        QPoint newOriginalPos = newWidget->pos();
+        
+        // 月视图→日视图：日视图从左滑入
+        QPoint newStartPos = newOriginalPos - QPoint(30, 0);
+        
+        newWidget->setWindowOpacity(0.5); // 从半透明开始
+        newWidget->move(newStartPos);
+        
+        // 执行进入动画的后半段（慢→快阶段）
+        QParallelAnimationGroup *enterGroup = new QParallelAnimationGroup(this);
+        
+        QPropertyAnimation *fadeInAnim = new QPropertyAnimation(newWidget, "windowOpacity");
+        fadeInAnim->setDuration(250);
+        fadeInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        fadeInAnim->setStartValue(0.5);
+        fadeInAnim->setEndValue(1.0);
+        
+        QPropertyAnimation *slideInAnim = new QPropertyAnimation(newWidget, "pos");
+        slideInAnim->setDuration(250);
+        slideInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        slideInAnim->setStartValue(newStartPos);
+        slideInAnim->setEndValue(newOriginalPos);
+        
+        enterGroup->addAnimation(fadeInAnim);
+        enterGroup->addAnimation(slideInAnim);
+        
+        connect(enterGroup, &QParallelAnimationGroup::finished, this, [=]() {
+            newWidget->move(newOriginalPos);
+            newWidget->setWindowOpacity(1.0);
+            
+            // 最终保障：强制设置正确的按钮状态
+            // 日视图显示 → 日视图按钮必须为checked，月视图按钮必须为unchecked
+            m_dayViewBtn->setChecked(true);
+            m_monthViewBtn->setChecked(false);
+            findChild<DayView*>("dayView")->updateDayViewStats();
+            
+            m_isAnimating = false;
+        });
+        
+        enterGroup->start(QAbstractAnimation::DeleteWhenStopped);
+        exitGroup->deleteLater();
+    });
+    
+    exitGroup->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 // 切换到月视图
 void MainWindow::switchToMonthView()
 {
-    m_mainStackedWidget->setCurrentIndex(1);
-    m_monthViewBtn->setChecked(true);
-    m_dayViewBtn->setChecked(false);
-    findChild<MonthView*>("monthView")->generateMonthCalendar();
+    if (m_isAnimating) {
+        return;
+    }
+    
+    if (m_mainStackedWidget->currentIndex() == 1) {
+        // 已经在月视图，确保按钮状态正确
+        m_monthViewBtn->setChecked(true);
+        m_dayViewBtn->setChecked(false);
+        findChild<MonthView*>("monthView")->generateMonthCalendar();
+        return;
+    }
+    
+    m_isAnimating = true;
+    
+    QWidget *currentWidget = m_mainStackedWidget->currentWidget();
+    if (!currentWidget) {
+        m_isAnimating = false;
+        return;
+    }
+    
+    QPoint originalPos = currentWidget->pos();
+    
+    // 日视图→月视图：日视图向左滑出
+    QPoint targetPos = originalPos - QPoint(60, 0);
+    
+    // 创建退出动画 - 只执行一半（快→慢阶段）
+    QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
+    
+    QPropertyAnimation *fadeOutAnim = new QPropertyAnimation(currentWidget, "windowOpacity");
+    fadeOutAnim->setDuration(250); // 总动画时长的一半
+    fadeOutAnim->setEasingCurve(QEasingCurve::InOutCubic); // 快→慢→快的缓动曲线
+    fadeOutAnim->setStartValue(1.0);
+    fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
+    
+    QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
+    slideOutAnim->setDuration(250);
+    slideOutAnim->setEasingCurve(QEasingCurve::InOutCubic);
+    slideOutAnim->setStartValue(originalPos);
+    slideOutAnim->setEndValue(QPoint(originalPos.x() - 30, originalPos.y())); // 只滑动一半距离
+    
+    exitGroup->addAnimation(fadeOutAnim);
+    exitGroup->addAnimation(slideOutAnim);
+    
+    connect(exitGroup, &QParallelAnimationGroup::finished, this, [=]() {
+        // 在速度最快时（动画中点）切换页面
+        m_mainStackedWidget->setCurrentIndex(1);
+        
+        // 恢复当前控件状态
+        currentWidget->move(originalPos);
+        currentWidget->setWindowOpacity(1.0);
+        
+        QWidget *newWidget = m_mainStackedWidget->currentWidget();
+        if (!newWidget) {
+            m_isAnimating = false;
+            return;
+        }
+        
+        QPoint newOriginalPos = newWidget->pos();
+        
+        // 日视图→月视图：月视图从右滑入
+        QPoint newStartPos = newOriginalPos + QPoint(30, 0);
+        
+        newWidget->setWindowOpacity(0.5); // 从半透明开始
+        newWidget->move(newStartPos);
+        
+        // 执行进入动画的后半段（慢→快阶段）
+        QParallelAnimationGroup *enterGroup = new QParallelAnimationGroup(this);
+        
+        QPropertyAnimation *fadeInAnim = new QPropertyAnimation(newWidget, "windowOpacity");
+        fadeInAnim->setDuration(250);
+        fadeInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        fadeInAnim->setStartValue(0.5);
+        fadeInAnim->setEndValue(1.0);
+        
+        QPropertyAnimation *slideInAnim = new QPropertyAnimation(newWidget, "pos");
+        slideInAnim->setDuration(250);
+        slideInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        slideInAnim->setStartValue(newStartPos);
+        slideInAnim->setEndValue(newOriginalPos);
+        
+        enterGroup->addAnimation(fadeInAnim);
+        enterGroup->addAnimation(slideInAnim);
+        
+        connect(enterGroup, &QParallelAnimationGroup::finished, this, [=]() {
+            newWidget->move(newOriginalPos);
+            newWidget->setWindowOpacity(1.0);
+            
+            // 最终保障：强制设置正确的按钮状态
+            // 月视图显示 → 月视图按钮必须为checked，日视图按钮必须为unchecked
+            m_monthViewBtn->setChecked(true);
+            m_dayViewBtn->setChecked(false);
+            findChild<MonthView*>("monthView")->generateMonthCalendar();
+            
+            m_isAnimating = false;
+        });
+        
+        enterGroup->start(QAbstractAnimation::DeleteWhenStopped);
+        exitGroup->deleteLater();
+    });
+    
+    exitGroup->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 // 显示设置窗口
@@ -225,19 +419,19 @@ void MainWindow::showSettingsWindow()
     restoreBackupBtn->setStyleSheet("background-color:#9370DB;");
     QPushButton *statisticsBtn = new QPushButton("学习统计");
     statisticsBtn->setStyleSheet("background-color:#52C41A;");
-    
+
     backupLayout->addWidget(createBackupBtn);
     backupLayout->addWidget(restoreBackupBtn);
     backupLayout->addWidget(statisticsBtn);
     backupLayout->addStretch();
-    
+
     // 学习统计对话框
     connect(statisticsBtn, &QPushButton::clicked, [=]() {
         QDialog *statsDlg = new QDialog(settingsDlg);
         statsDlg->setWindowTitle("学习统计");
         statsDlg->setFixedSize(500, 400);
         statsDlg->setModal(true);
-        
+
         // 设置统计对话框样式
         statsDlg->setStyleSheet(
             "QDialog{background-color:#FFFFFF; border-radius:10px; border:1px solid #EEEEEE;}"
@@ -247,50 +441,50 @@ void MainWindow::showSettingsWindow()
             "QGroupBox{font-size:14px; font-weight:bold; color:#333333; border:1px solid #DDDDDD; border-radius:6px; margin-top:10px; padding-top:15px;}"
             "QGroupBox::title{subcontrol-origin:margin; left:10px; padding:0 5px 0 5px;}"
         );
-        
+
         QVBoxLayout *statsLayout = new QVBoxLayout(statsDlg);
         statsLayout->setSpacing(15);
         statsLayout->setContentsMargins(20, 20, 20, 20);
-        
+
         // 学习时长统计
         QGroupBox *studyHoursGroup = new QGroupBox("学习时长统计");
         QGridLayout *studyHoursLayout = new QGridLayout(studyHoursGroup);
         studyHoursLayout->setSpacing(10);
         studyHoursLayout->setContentsMargins(15, 15, 15, 15);
-        
+
         studyHoursLayout->addWidget(new QLabel("总学习天数："), 0, 0, 1, 1, Qt::AlignRight);
         studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
         studyHoursLayout->addWidget(new QLabel("总学习时长："), 1, 0, 1, 1, Qt::AlignRight);
         studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyHours()) + " 小时"), 1, 1, 1, 1, Qt::AlignLeft);
         studyHoursLayout->addWidget(new QLabel("平均每天学习时长："), 2, 0, 1, 1, Qt::AlignRight);
         studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getAverageStudyHoursPerDay(), 'f', 1) + " 小时"), 2, 1, 1, 1, Qt::AlignLeft);
-        
+
         // 项目完成情况统计
         QGroupBox *projectsGroup = new QGroupBox("项目完成情况");
         QGridLayout *projectsLayout = new QGridLayout(projectsGroup);
         projectsLayout->setSpacing(10);
         projectsLayout->setContentsMargins(15, 15, 15, 15);
-        
+
         projectsLayout->addWidget(new QLabel("总项目数："), 0, 0, 1, 1, Qt::AlignRight);
         projectsLayout->addWidget(new QLabel(QString::number(appDatas.getTotalProjects()) + " 个"), 0, 1, 1, 1, Qt::AlignLeft);
         projectsLayout->addWidget(new QLabel("完成项目数："), 1, 0, 1, 1, Qt::AlignRight);
         projectsLayout->addWidget(new QLabel(QString::number(appDatas.getCompletedProjects()) + " 个"), 1, 1, 1, 1, Qt::AlignLeft);
         projectsLayout->addWidget(new QLabel("项目完成率："), 2, 0, 1, 1, Qt::AlignRight);
         projectsLayout->addWidget(new QLabel(QString::number(appDatas.getProjectCompletionRate(), 'f', 1) + "%"), 2, 1, 1, 1, Qt::AlignLeft);
-        
+
         // 最大连续天数
         QGroupBox *continuousGroup = new QGroupBox("连续学习");
         QGridLayout *continuousLayout = new QGridLayout(continuousGroup);
         continuousLayout->setSpacing(10);
         continuousLayout->setContentsMargins(15, 15, 15, 15);
-        
+
         continuousLayout->addWidget(new QLabel("最大连续学习天数："), 0, 0, 1, 1, Qt::AlignRight);
         continuousLayout->addWidget(new QLabel(QString::number(appDatas.maxContinDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
-        
+
         statsLayout->addWidget(studyHoursGroup);
         statsLayout->addWidget(projectsGroup);
         statsLayout->addWidget(continuousGroup);
-        
+
         // 关闭按钮
         QHBoxLayout *closeLayout = new QHBoxLayout;
         QPushButton *closeBtn = new QPushButton("关闭");
@@ -298,20 +492,20 @@ void MainWindow::showSettingsWindow()
         closeLayout->addStretch();
         closeLayout->addWidget(closeBtn);
         closeLayout->addStretch();
-        
+
         statsLayout->addLayout(closeLayout);
-        
+
         connect(closeBtn, &QPushButton::clicked, statsDlg, &QDialog::close);
-        
+
         statsDlg->exec();
     });
-    
+
     // 连接备份和恢复按钮的信号槽
     connect(createBackupBtn, &QPushButton::clicked, [=]() {
         // 获取当前日期时间作为备份文件名
         QString backupFileName = "study_data_backup_" + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".json";
         QString backupPath = QFileDialog::getSaveFileName(settingsDlg, "保存数据备份", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + backupFileName, "JSON Files (*.json)");
-        
+
         if (!backupPath.isEmpty()) {
             if (appDatas.createBackup(backupPath)) {
                 QMessageBox::information(settingsDlg, "成功", "数据备份创建成功！\n" + backupPath);
@@ -320,15 +514,15 @@ void MainWindow::showSettingsWindow()
             }
         }
     });
-    
+
     connect(restoreBackupBtn, &QPushButton::clicked, [=]() {
         QString backupPath = QFileDialog::getOpenFileName(settingsDlg, "选择数据备份文件", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), "JSON Files (*.json)");
-        
+
         if (!backupPath.isEmpty()) {
             QMessageBox::StandardButton reply;
-            reply = QMessageBox::warning(settingsDlg, "警告", "从备份恢复将覆盖当前所有数据，是否继续？", 
+            reply = QMessageBox::warning(settingsDlg, "警告", "从备份恢复将覆盖当前所有数据，是否继续？",
                                         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-            
+
             if (reply == QMessageBox::Yes) {
                 if (appDatas.restoreFromBackup(backupPath)) {
                     QMessageBox::information(settingsDlg, "成功", "数据恢复成功！");
@@ -340,7 +534,7 @@ void MainWindow::showSettingsWindow()
             }
         }
     });
-    
+
     // 添加所有布局到主布局
     mainLayout->addLayout(autoStartLayout);
     mainLayout->addLayout(minTrayLayout);
@@ -462,6 +656,41 @@ void MainWindow::initUI()
     mainLayout->addWidget(m_mainStackedWidget);
 
     // 连接视图切换按钮的信号槽
-    connect(m_dayViewBtn, &QPushButton::clicked, this, &MainWindow::switchToDayView);
-    connect(m_monthViewBtn, &QPushButton::clicked, this, &MainWindow::switchToMonthView);
+    // 彻底修复：完全控制按钮状态，禁止自动切换
+    connect(m_dayViewBtn, &QPushButton::clicked, this, [=]() {
+        // 1. 首先阻止按钮的自动checked状态变化
+        // 2. 只有在动画允许时才执行切换
+        if (!m_isAnimating) {
+            switchToDayView();
+        } else {
+            // 动画进行时，保持当前正确的状态
+            if (m_mainStackedWidget->currentIndex() == 0) {
+                // 当前是日视图，保持日视图按钮为checked
+                m_dayViewBtn->setChecked(true);
+                m_monthViewBtn->setChecked(false);
+            } else {
+                // 当前是月视图，保持月视图按钮为checked
+                m_monthViewBtn->setChecked(true);
+                m_dayViewBtn->setChecked(false);
+            }
+        }
+    });
+    connect(m_monthViewBtn, &QPushButton::clicked, this, [=]() {
+        // 1. 首先阻止按钮的自动checked状态变化
+        // 2. 只有在动画允许时才执行切换
+        if (!m_isAnimating) {
+            switchToMonthView();
+        } else {
+            // 动画进行时，保持当前正确的状态
+            if (m_mainStackedWidget->currentIndex() == 1) {
+                // 当前是月视图，保持月视图按钮为checked
+                m_monthViewBtn->setChecked(true);
+                m_dayViewBtn->setChecked(false);
+            } else {
+                // 当前是日视图，保持日视图按钮为checked
+                m_dayViewBtn->setChecked(true);
+                m_monthViewBtn->setChecked(false);
+            }
+        }
+    });
 }

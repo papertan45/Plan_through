@@ -39,6 +39,10 @@
 #include <QScreen>
 #include <QTimer>
 #include <QFileDialog>
+#include <QPropertyAnimation>
+#include <QEasingCurve>
+#include <QParallelAnimationGroup>
+#include <QAbstractAnimation>
 #include "widgets/dayview.h"
 #include "widgets/monthview.h"
 
@@ -119,6 +123,9 @@ private:
 
     DayView* m_dayView = nullptr;
     MonthView* m_monthView = nullptr;
+    
+    // 用于防止连点的标志
+    bool m_isAnimating = false;
 };
 
 #endif

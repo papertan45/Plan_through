@@ -25,8 +25,8 @@ DayView::DayView(QWidget *parent)
 
     QString funcBtnStyle =
         "QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#FFFFFF; color:#333333;}"
-        "QPushButton:hover{background-color:#F0F0F0;}"
-        "QPushButton:pressed{background-color:#E0E0E0;}";
+        "QPushButton:hover{background-color:#F8F9FA;}"
+        "QPushButton:pressed{background-color:#E9ECEF;}";
     clearBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#FF6B6B; color:#FFFFFF;}"
                             "QPushButton:hover{background-color:#FF5252;}"
                             "QPushButton:pressed{background-color:#FF3B3B;}");

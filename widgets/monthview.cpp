@@ -30,7 +30,8 @@ MonthView::MonthView(QWidget *parent)
     prevMonthBtn->setStyleSheet(monthBtnStyle);
     nextMonthBtn->setStyleSheet(monthBtnStyle);
     currentMonthBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 10px; border-radius:6px; border:none; background-color:#2D8CF0; color:#FFFFFF;}"
-                                   "QPushButton:hover{background-color:#1D7AD9;}");
+                                   "QPushButton:hover{background-color:#1D7AD9;}"
+                                   "QPushButton:pressed{background-color:#1D7AD9;}");
     
     monthLayout->addWidget(prevMonthBtn);
     monthLayout->addWidget(m_monthTitleLabel);
