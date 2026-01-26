@@ -13,7 +13,6 @@ SOURCES += \
     appdatas.cpp \
     main.cpp \
     mainwindow.cpp \
-    clean.cpp \
     utils/datehelper.cpp \
     utils/widgetcontainer.cpp \
     widgets/dayview.cpp \
@@ -24,7 +23,6 @@ HEADERS += \
     appdatas.h \
     datastruct.h \
     mainwindow.h \
-    clean.h \
     utils/datehelper.h \
     utils/widgetcontainer.h \
     widgets/dayview.h \
