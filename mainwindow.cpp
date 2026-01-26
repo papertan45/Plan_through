@@ -9,6 +9,9 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    // 去除默认标题栏
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint);
+    
     widgetContainer("main", this);
     initUI();
     applyTheme(appDatas.themeType());
@@ -19,8 +22,12 @@ MainWindow::MainWindow(QWidget *parent)
     findChild<DayView*>("dayView")->updateDayViewStats();
     findChild<MonthView*>("monthView")->generateMonthCalendar();
 
-    // 默认显示月视图
-    switchToMonthView();
+    // 根据用户设置显示默认视图
+    if (appDatas.defaultViewType() == 0) {
+        switchToMonthView();
+    } else {
+        switchToDayView();
+    }
 
     // 如果设置了开机自启，则隐藏窗口
     if (appDatas.isAutoStartup()) {
@@ -152,16 +159,16 @@ void MainWindow::switchToDayView()
     QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
     
     QPropertyAnimation *fadeOutAnim = new QPropertyAnimation(currentWidget, "windowOpacity");
-    fadeOutAnim->setDuration(250); // 总动画时长的一半
-    fadeOutAnim->setEasingCurve(QEasingCurve::InOutCubic); // 快→慢→快的缓动曲线
-    fadeOutAnim->setStartValue(1.0);
-    fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
-    
-    QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
-    slideOutAnim->setDuration(250);
-    slideOutAnim->setEasingCurve(QEasingCurve::InOutCubic);
-    slideOutAnim->setStartValue(originalPos);
-    slideOutAnim->setEndValue(QPoint(originalPos.x() + 30, originalPos.y())); // 只滑动一半距离
+        fadeOutAnim->setDuration(250); // 总动画时长的一半
+        fadeOutAnim->setEasingCurve(QEasingCurve::InCubic); // 慢→快的缓动曲线
+        fadeOutAnim->setStartValue(1.0);
+        fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
+        
+        QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
+        slideOutAnim->setDuration(250);
+        slideOutAnim->setEasingCurve(QEasingCurve::InCubic); // 慢→快的缓动曲线
+        slideOutAnim->setStartValue(originalPos);
+        slideOutAnim->setEndValue(QPoint(originalPos.x() + 30, originalPos.y())); // 只滑动一半距离
     
     exitGroup->addAnimation(fadeOutAnim);
     exitGroup->addAnimation(slideOutAnim);
@@ -193,13 +200,13 @@ void MainWindow::switchToDayView()
         
         QPropertyAnimation *fadeInAnim = new QPropertyAnimation(newWidget, "windowOpacity");
         fadeInAnim->setDuration(250);
-        fadeInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        fadeInAnim->setEasingCurve(QEasingCurve::OutCubic); // 快→慢的缓动曲线
         fadeInAnim->setStartValue(0.5);
         fadeInAnim->setEndValue(1.0);
         
         QPropertyAnimation *slideInAnim = new QPropertyAnimation(newWidget, "pos");
         slideInAnim->setDuration(250);
-        slideInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        slideInAnim->setEasingCurve(QEasingCurve::OutCubic); // 快→慢的缓动曲线
         slideInAnim->setStartValue(newStartPos);
         slideInAnim->setEndValue(newOriginalPos);
         
@@ -258,16 +265,16 @@ void MainWindow::switchToMonthView()
     QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
     
     QPropertyAnimation *fadeOutAnim = new QPropertyAnimation(currentWidget, "windowOpacity");
-    fadeOutAnim->setDuration(250); // 总动画时长的一半
-    fadeOutAnim->setEasingCurve(QEasingCurve::InOutCubic); // 快→慢→快的缓动曲线
-    fadeOutAnim->setStartValue(1.0);
-    fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
-    
-    QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
-    slideOutAnim->setDuration(250);
-    slideOutAnim->setEasingCurve(QEasingCurve::InOutCubic);
-    slideOutAnim->setStartValue(originalPos);
-    slideOutAnim->setEndValue(QPoint(originalPos.x() - 30, originalPos.y())); // 只滑动一半距离
+        fadeOutAnim->setDuration(250); // 总动画时长的一半
+        fadeOutAnim->setEasingCurve(QEasingCurve::InCubic); // 慢→快的缓动曲线
+        fadeOutAnim->setStartValue(1.0);
+        fadeOutAnim->setEndValue(0.5); // 只淡出到半透明
+        
+        QPropertyAnimation *slideOutAnim = new QPropertyAnimation(currentWidget, "pos");
+        slideOutAnim->setDuration(250);
+        slideOutAnim->setEasingCurve(QEasingCurve::InCubic); // 慢→快的缓动曲线
+        slideOutAnim->setStartValue(originalPos);
+        slideOutAnim->setEndValue(QPoint(originalPos.x() - 30, originalPos.y())); // 只滑动一半距离
     
     exitGroup->addAnimation(fadeOutAnim);
     exitGroup->addAnimation(slideOutAnim);
@@ -299,13 +306,13 @@ void MainWindow::switchToMonthView()
         
         QPropertyAnimation *fadeInAnim = new QPropertyAnimation(newWidget, "windowOpacity");
         fadeInAnim->setDuration(250);
-        fadeInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        fadeInAnim->setEasingCurve(QEasingCurve::OutCubic); // 快→慢的缓动曲线
         fadeInAnim->setStartValue(0.5);
         fadeInAnim->setEndValue(1.0);
         
         QPropertyAnimation *slideInAnim = new QPropertyAnimation(newWidget, "pos");
         slideInAnim->setDuration(250);
-        slideInAnim->setEasingCurve(QEasingCurve::InOutCubic);
+        slideInAnim->setEasingCurve(QEasingCurve::OutCubic); // 快→慢的缓动曲线
         slideInAnim->setStartValue(newStartPos);
         slideInAnim->setEndValue(newOriginalPos);
         
@@ -339,6 +346,11 @@ void MainWindow::showSettingsWindow()
     settingsDlg->setWindowTitle("软件设置");
     settingsDlg->setFixedSize(350, 300);
     settingsDlg->setModal(true);
+    // 禁用所有可能的窗口动画效果
+    settingsDlg->setAttribute(Qt::WA_NoSystemBackground, false);
+    settingsDlg->setAttribute(Qt::WA_DontShowOnScreen, false);
+    settingsDlg->setAttribute(Qt::WA_TranslucentBackground, false);
+    settingsDlg->setWindowOpacity(1.0);
 
     // 设置对话框样式
     settingsDlg->setStyleSheet(
@@ -386,6 +398,19 @@ void MainWindow::showSettingsWindow()
     themeLayout->addWidget(themeCbx);
     themeLayout->addStretch();
     connect(themeCbx, &QComboBox::currentIndexChanged, this, &MainWindow::onThemeChanged);
+    
+    // 默认视图设置
+    QHBoxLayout *defaultViewLayout = new QHBoxLayout;
+    QLabel *defaultViewLab = new QLabel("默认视图：");
+    QComboBox *defaultViewCbx = new QComboBox;
+    defaultViewCbx->addItems({"月视图", "日视图"});
+    defaultViewCbx->setCurrentIndex(appDatas.defaultViewType());
+    defaultViewLayout->addWidget(defaultViewLab);
+    defaultViewLayout->addWidget(defaultViewCbx);
+    defaultViewLayout->addStretch();
+    connect(defaultViewCbx, &QComboBox::currentIndexChanged, [=](int index) {
+        appDatas.setDefaultViewType(index);
+    });
 
     // 打开存档文件位置
     QHBoxLayout *pathLayout = new QHBoxLayout;
@@ -431,6 +456,11 @@ void MainWindow::showSettingsWindow()
         statsDlg->setWindowTitle("学习统计");
         statsDlg->setFixedSize(500, 400);
         statsDlg->setModal(true);
+        // 禁用所有可能的窗口动画效果
+        statsDlg->setAttribute(Qt::WA_NoSystemBackground, false);
+        statsDlg->setAttribute(Qt::WA_DontShowOnScreen, false);
+        statsDlg->setAttribute(Qt::WA_TranslucentBackground, false);
+        statsDlg->setWindowOpacity(1.0);
 
         // 设置统计对话框样式
         statsDlg->setStyleSheet(
@@ -539,6 +569,7 @@ void MainWindow::showSettingsWindow()
     mainLayout->addLayout(autoStartLayout);
     mainLayout->addLayout(minTrayLayout);
     mainLayout->addLayout(themeLayout);
+    mainLayout->addLayout(defaultViewLayout);
     mainLayout->addLayout(pathLayout);
     mainLayout->addLayout(logLayout);
     mainLayout->addLayout(backupLayout);
@@ -620,6 +651,10 @@ void MainWindow::initUI()
     m_monthViewBtn = new QPushButton("月视图");
     m_settingsBtn = new QPushButton("设置");
     
+    // 自定义最小化和关闭按钮
+    m_minimizeBtn = new QPushButton("-");
+    m_closeBtn = new QPushButton("×");
+    
     // 按钮样式
     QString topBtnStyle = 
         "QPushButton{font-size:15px; font-weight:bold; padding:8px 25px; margin-right:8px; border-radius:8px; border:none; background-color:#FFFFFF; color:#2D8CF0;}"
@@ -629,20 +664,38 @@ void MainWindow::initUI()
     QString settingBtnStyle = 
         "QPushButton{font-size:12px; padding:6px 12px; border-radius:6px; border:none; background-color:#2D8CF0; color:#FFFFFF; margin-left:8px;}"
         "QPushButton:hover{background-color:#1D7AD9;}";
+    QString windowBtnStyle = 
+        "QPushButton{font-size:16px; font-weight:bold; padding:4px 10px; border-radius:6px; border:none; background-color:#FFFFFF; color:#333333; margin-left:4px;}"
+        "QPushButton:hover{background-color:#ECF5FF; color:#1D7AD9;}"
+        "QPushButton:pressed{background-color:#1D7AD9; color:#FFFFFF;}";
     
     m_dayViewBtn->setStyleSheet(topBtnStyle);
     m_monthViewBtn->setStyleSheet(topBtnStyle);
     m_settingsBtn->setStyleSheet(settingBtnStyle);
+    m_minimizeBtn->setStyleSheet(windowBtnStyle);
+    m_closeBtn->setStyleSheet(windowBtnStyle);
     
     // 设置按钮为可检查状态
     m_dayViewBtn->setCheckable(true);
     m_monthViewBtn->setCheckable(true);
     m_dayViewBtn->setChecked(true);
 
+    // 连接按钮信号槽
+    connect(m_minimizeBtn, &QPushButton::clicked, this, &MainWindow::showMinimized);
+    connect(m_closeBtn, &QPushButton::clicked, this, [=]() {
+        if (appDatas.isMinToTray()) {
+            this->hide();
+        } else {
+            qApp->quit();
+        }
+    });
+
     topTabLayout->addWidget(m_dayViewBtn);
     topTabLayout->addWidget(m_monthViewBtn);
     topTabLayout->addStretch();
     topTabLayout->addWidget(m_settingsBtn);
+    topTabLayout->addWidget(m_minimizeBtn);
+    topTabLayout->addWidget(m_closeBtn);
 
     mainLayout->addLayout(topTabLayout);
     connect(m_settingsBtn, &QPushButton::clicked, this, &MainWindow::showSettingsWindow);

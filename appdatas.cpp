@@ -590,6 +590,9 @@ void AppDatas::initSettings()
     // 加载自动清理内存设置
     m_isAutoCleanMemoryEnabled = m_appSettings->value("auto_clean_memory_enabled", true).toBool();
     m_autoCleanMemoryThreshold = m_appSettings->value("auto_clean_memory_threshold", 80).toInt();
+    
+    // 加载默认视图设置
+    m_defaultViewType = m_appSettings->value("default_view_type", 0).toInt();
 }
 
 // 保存设置
@@ -602,6 +605,9 @@ void AppDatas::saveSettings()
     // 保存自动清理内存设置
     m_appSettings->setValue("auto_clean_memory_enabled", m_isAutoCleanMemoryEnabled);
     m_appSettings->setValue("auto_clean_memory_threshold", m_autoCleanMemoryThreshold);
+    
+    // 保存默认视图设置
+    m_appSettings->setValue("default_view_type", m_defaultViewType);
     
     m_appSettings->sync();
 }

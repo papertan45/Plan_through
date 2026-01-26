@@ -116,6 +116,8 @@ private:
     QPushButton *m_dayViewBtn = nullptr;
     QPushButton *m_monthViewBtn = nullptr;
     QPushButton *m_settingsBtn = nullptr;
+    QPushButton *m_minimizeBtn = nullptr;
+    QPushButton *m_closeBtn = nullptr;
     QStackedWidget *m_mainStackedWidget = nullptr;
 
     QSystemTrayIcon *m_systemTrayIcon = nullptr;

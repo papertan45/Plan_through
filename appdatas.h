@@ -74,6 +74,14 @@ public:
     // 参数1：最大连续天数
     void setMaxContinDays(int continDays){m_maxContinuousDays = continDays;}
     
+    // 设置默认视图类型
+    // 参数1：视图类型（0: 月视图, 1: 日视图）
+    void setDefaultViewType(int viewType){m_defaultViewType = viewType;}
+    
+    // 获取默认视图类型
+    // 返回：视图类型（0: 月视图, 1: 日视图）
+    int defaultViewType(){return m_defaultViewType;}
+    
     // 重载[]运算符，用于访问指定日期的学习数据
     // 参数1：日期键
     // 返回：学习数据引用
@@ -184,6 +192,9 @@ private:
     // 自动清理内存相关设置
     bool m_isAutoCleanMemoryEnabled = true; // 默认启用自动清理
     int m_autoCleanMemoryThreshold = 80; // 默认内存使用率超过80%时清理
+    
+    // 默认视图设置
+    int m_defaultViewType = 0; // 0: 月视图, 1: 日视图
 
 private:
     // 保存每日日志
