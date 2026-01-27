@@ -634,10 +634,119 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
+// 鼠标按下事件处理
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        // 检查是否在缩放手柄上
+        if (m_resizeHandle->geometry().contains(event->pos())) {
+            m_isResizing = true;
+            m_resizeEdge = 12; // 特殊标记为手柄调整
+            m_resizeStartPos = event->globalPos();
+            this->setCursor(Qt::SizeFDiagCursor);
+        }
+        // 检查是否在标题栏区域（顶部标签栏）
+        else if (event->pos().y() <= 60) { // 假设标题栏高度为60
+            m_isDragging = true;
+            m_dragStartPos = event->globalPos() - this->frameGeometry().topLeft();
+            this->setCursor(Qt::ClosedHandCursor);
+        }
+    }
+    QMainWindow::mousePressEvent(event);
+}
+
+// 鼠标移动事件处理
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    // 处理调整大小
+    if (m_isResizing) {
+        QPoint delta = event->globalPos() - m_resizeStartPos;
+        QRect geometry = this->geometry();
+        
+        if (m_resizeEdge == 12) { // 缩放手柄
+            // 通过手柄调整时，同时改变宽度和高度
+            int newWidth = geometry.width() + delta.x();
+            int newHeight = geometry.height() + delta.y();
+            
+            if (newWidth >= 400 && newHeight >= 500) {
+                geometry.setWidth(newWidth);
+                geometry.setHeight(newHeight);
+                this->setGeometry(geometry);
+                m_resizeStartPos = event->globalPos();
+                // 更新手柄位置
+                m_resizeHandle->move(this->width() - 20, this->height() - 20);
+            }
+        }
+    }
+    // 处理拖动
+    else if (m_isDragging) {
+        this->move(event->globalPos() - m_dragStartPos);
+    }
+    // 处理鼠标悬停时的光标变化
+    else {
+        // 检查是否在缩放手柄上
+        if (m_resizeHandle->geometry().contains(event->pos())) {
+            this->setCursor(Qt::SizeFDiagCursor);
+        }
+        // 检查是否在标题栏区域（顶部标签栏）
+        else if (event->pos().y() <= 60) {
+            this->setCursor(Qt::OpenHandCursor);
+        }
+        else {
+            this->setCursor(Qt::ArrowCursor);
+        }
+    }
+    QMainWindow::mouseMoveEvent(event);
+}
+
+// 鼠标释放事件处理
+void MainWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        m_isDragging = false;
+        m_isResizing = false;
+        this->setCursor(Qt::ArrowCursor);
+    }
+    QMainWindow::mouseReleaseEvent(event);
+}
+
+// 窗口大小改变事件处理
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    // 更新缩放手柄位置，确保它始终在右下角
+    if (m_resizeHandle) {
+        m_resizeHandle->move(this->width() - 20, this->height() - 20);
+    }
+    QMainWindow::resizeEvent(event);
+}
+
+// 获取调整大小的边缘
+int MainWindow::getResizeEdge(const QPoint &pos)
+{
+    int edge = 0;
+    QRect rect = this->rect();
+    
+    if (pos.x() <= m_resizeMargin) {
+        edge |= 1; // 左边缘
+    }
+    if (pos.y() <= m_resizeMargin) {
+        edge |= 2; // 上边缘
+    }
+    if (pos.x() >= rect.width() - m_resizeMargin) {
+        edge |= 4; // 右边缘
+    }
+    if (pos.y() >= rect.height() - m_resizeMargin) {
+        edge |= 8; // 下边缘
+    }
+    
+    return edge;
+}
+
 // 初始化用户界面
 void MainWindow::initUI()
 {
     this->resize(500, 600);
+    this->setMouseTracking(true); // 启用鼠标跟踪，确保鼠标移动时触发mouseMoveEvent
 
     QWidget* centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
@@ -746,4 +855,15 @@ void MainWindow::initUI()
             }
         }
     });
+    
+    // 创建右下角缩放手柄
+    m_resizeHandle = new QWidget(this);
+    m_resizeHandle->setFixedSize(12, 12);
+    m_resizeHandle->setStyleSheet(
+        "QWidget{background-color:#2D8CF0; border-radius:6px; border:2px solid #FFFFFF;}"
+        "QWidget:hover{background-color:#1D7AD9; cursor:sizeFDiagCursor;}"
+    );
+    m_resizeHandle->setCursor(Qt::SizeFDiagCursor);
+    m_resizeHandle->move(this->width() - 20, this->height() - 20);
+    m_resizeHandle->show();
 }

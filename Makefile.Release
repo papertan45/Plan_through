@@ -468,11 +468,11 @@ release/moc_mainwindow.cpp: mainwindow.h \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/qparallelanimationgroup.h \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/qanimationgroup.h \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/QAbstractAnimation \
+		C:/Qt/6.10.1/mingw_64/include/QtGui/QMouseEvent \
 		widgets/dayview.h \
 		C:/Qt/6.10.1/mingw_64/include/QtWidgets/QWidget \
 		widgets/timeaxis.h \
 		widgets/monthview.h \
-		C:/Qt/6.10.1/mingw_64/include/QtGui/QMouseEvent \
 		release/moc_predefs.h \
 		C:/Qt/6.10.1/mingw_64/bin/moc.exe
 	C:\Qt\6.10.1\mingw_64\bin\moc.exe $(DEFINES) --include G:/C++/Qt/Plan_through-main/release/moc_predefs.h -IC:/Qt/6.10.1/mingw_64/mkspecs/win32-g++ -IG:/C++/Qt/Plan_through-main -IC:/Qt/6.10.1/mingw_64/include -IC:/Qt/6.10.1/mingw_64/include/QtWidgets -IC:/Qt/6.10.1/mingw_64/include/QtGui -IC:/Qt/6.10.1/mingw_64/include/QtNetwork -IC:/Qt/6.10.1/mingw_64/include/QtCore -IC:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++ -IC:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/backward -IC:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include -IC:/Qt/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include-fixed -IC:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/include mainwindow.h -o release\moc_mainwindow.cpp
@@ -1694,11 +1694,11 @@ release/main.o: main.cpp C:/Qt/6.10.1/mingw_64/include/QtWidgets/QApplication \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/qparallelanimationgroup.h \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/qanimationgroup.h \
 		C:/Qt/6.10.1/mingw_64/include/QtCore/QAbstractAnimation \
+		C:/Qt/6.10.1/mingw_64/include/QtGui/QMouseEvent \
 		widgets/dayview.h \
 		C:/Qt/6.10.1/mingw_64/include/QtWidgets/QWidget \
 		widgets/timeaxis.h \
-		widgets/monthview.h \
-		C:/Qt/6.10.1/mingw_64/include/QtGui/QMouseEvent
+		widgets/monthview.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\main.o main.cpp
 
 release/mainwindow.o: mainwindow.cpp datastruct.h \

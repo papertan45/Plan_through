@@ -43,6 +43,7 @@
 #include <QEasingCurve>
 #include <QParallelAnimationGroup>
 #include <QAbstractAnimation>
+#include <QMouseEvent>
 #include "widgets/dayview.h"
 #include "widgets/monthview.h"
 
@@ -104,6 +105,18 @@ protected:
     // 窗口关闭事件处理
     // 参数1：关闭事件对象
     void closeEvent(QCloseEvent *event) override;
+    
+    // 窗口大小改变事件处理
+    void resizeEvent(QResizeEvent *event) override;
+    
+    // 鼠标按下事件处理
+    void mousePressEvent(QMouseEvent *event) override;
+    
+    // 鼠标移动事件处理
+    void mouseMoveEvent(QMouseEvent *event) override;
+    
+    // 鼠标释放事件处理
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
     // 初始化用户界面
@@ -111,6 +124,9 @@ private:
     
     // 初始化系统托盘
     void initSystemTray();
+    
+    // 获取调整大小的边缘
+    int getResizeEdge(const QPoint &pos);
 
 private:
     QPushButton *m_dayViewBtn = nullptr;
@@ -119,6 +135,7 @@ private:
     QPushButton *m_minimizeBtn = nullptr;
     QPushButton *m_closeBtn = nullptr;
     QStackedWidget *m_mainStackedWidget = nullptr;
+    QWidget *m_resizeHandle = nullptr; // 右下角缩放手柄
 
     QSystemTrayIcon *m_systemTrayIcon = nullptr;
     QMenu *m_trayMenu = nullptr;
@@ -128,6 +145,16 @@ private:
     
     // 用于防止连点的标志
     bool m_isAnimating = false;
+    
+    // 窗口拖动相关
+    bool m_isDragging = false;
+    QPoint m_dragStartPos;
+    
+    // 窗口缩放相关
+    bool m_isResizing = false;
+    QPoint m_resizeStartPos;
+    int m_resizeEdge = 0;
+    const int m_resizeMargin = 5; // 调整大小的边缘宽度
 };
 
 #endif
