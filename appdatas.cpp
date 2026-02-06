@@ -328,7 +328,7 @@ void AppDatas::cleanupOldLogs()
     QFileInfoList logFiles = logDir.entryInfoList(QStringList() << "*.json", QDir::Files);
     
     QDate currentDate = QDate::currentDate();
-    int daysToKeep = 7;
+    int daysToKeep = 30;
     
     foreach (const QFileInfo& fileInfo, logFiles) {
         QString fileName = fileInfo.fileName();
@@ -647,7 +647,7 @@ int AppDatas::calculateContinuousDays()
 {
     int days = 0;
     QDate current = QDate::currentDate();
-    while (contains(current) && m_studyDataMap[current].studyHours > 0) {
+    while (contains(current)) {
         days++;
         current = current.addDays(-1);
     }
@@ -870,9 +870,7 @@ int AppDatas::getTotalStudyDays() const
     int totalDays = 0;
     QMap<QDate, DateStudyData>::const_iterator it = m_studyDataMap.constBegin();
     while (it != m_studyDataMap.constEnd()) {
-        if (it.value().studyHours > 0) {
-            totalDays++;
-        }
+        totalDays++;
         ++it;
     }
     return totalDays;
