@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 {
     try {
         QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+        QApplication::setAttribute(Qt::AA_Use96Dpi);
         QApplication a(argc, argv);
 
         qDebug() << "Application started";
