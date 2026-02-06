@@ -596,7 +596,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             int newWidth = geometry.width() + delta.x();
             int newHeight = geometry.height() + delta.y();
             
-            if (newWidth >= 400 && newHeight >= 500) {
+            if (newWidth >= 400 && newHeight >= 800) {
                 geometry.setWidth(newWidth);
                 geometry.setHeight(newHeight);
                 this->setGeometry(geometry);

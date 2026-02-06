@@ -618,39 +618,15 @@ void AppDatas::setAutoStartup(bool isAuto)
 {
     m_isAutoStartup = isAuto;
     
-    QString serviceName = "PlanThroughService";
-    QString displayName = "学习计划打卡服务";
-    QString executablePath = QApplication::applicationFilePath().replace("/", "\\");
-    
-    // 确保包含windowservice目录
-    QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath());
-    
-    // 尝试加载服务管理类
-    try {
-        // 动态加载服务管理功能
-        if (isAuto) {
-            // 检查服务是否已安装
-            if (!ServiceManager::isServiceInstalled(serviceName)) {
-                // 安装服务
-                if (ServiceManager::installService(serviceName, displayName, executablePath)) {
-                    // 启动服务
-                    ServiceManager::startService(serviceName);
-                }
-            } else if (!ServiceManager::isServiceRunning(serviceName)) {
-                // 服务已安装但未运行，启动服务
-                ServiceManager::startService(serviceName);
-            }
-        } else {
-            // 取消自动启动，卸载服务
-            if (ServiceManager::isServiceInstalled(serviceName)) {
-                ServiceManager::uninstallService(serviceName);
-            }
-        }
-    } catch (...) {
-        // 如果服务安装失败，回退到注册表方式
-        QSettings reg("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
-        if(isAuto) reg.setValue("PlanThrough", executablePath);
-        else reg.remove("PlanThrough");
+    // 使用注册表方式设置开机自启
+    QSettings reg("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    if(isAuto) {
+        QString executablePath = QApplication::applicationFilePath().replace("/", "\\");
+        reg.setValue("PlanThrough", executablePath);
+        qDebug() << "已设置开机自启：" << executablePath;
+    } else {
+        reg.remove("PlanThrough");
+        qDebug() << "已取消开机自启";
     }
 }
 
