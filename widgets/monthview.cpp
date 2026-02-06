@@ -18,6 +18,7 @@ MonthView::MonthView(QWidget *parent)
     QPushButton* prevMonthBtn = new QPushButton("◀ 上月");
     QPushButton* nextMonthBtn = new QPushButton("下月 ▶");
     QPushButton* currentMonthBtn = new QPushButton("当月");
+    QPushButton* statisticsBtn = new QPushButton("学习统计");
     m_monthTitleLabel = new QLabel(QString("%1年%2月").arg(DateHelper::currentYear()).arg(DateHelper::currentMonth()));
     m_monthTitleLabel->setAlignment(Qt::AlignCenter);
     m_monthTitleLabel->setStyleSheet("font-size:15px; font-weight:bold; color:#2D8CF0; padding:0 10px;");
@@ -32,12 +33,161 @@ MonthView::MonthView(QWidget *parent)
     currentMonthBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 10px; border-radius:6px; border:none; background-color:#2D8CF0; color:#FFFFFF;}"
                                    "QPushButton:hover{background-color:#1D7AD9;}"
                                    "QPushButton:pressed{background-color:#1D7AD9;}");
+    statisticsBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 10px; border-radius:6px; border:none; background-color:#52C41A; color:#FFFFFF;}"
+                                   "QPushButton:hover{background-color:#4CAF50;}"
+                                   "QPushButton:pressed{background-color:#45a049;}");
     
     monthLayout->addWidget(prevMonthBtn);
     monthLayout->addWidget(m_monthTitleLabel);
     monthLayout->addWidget(nextMonthBtn);
     monthLayout->addStretch();
     monthLayout->addWidget(currentMonthBtn);
+    monthLayout->addWidget(statisticsBtn);
+    
+    // 学习统计对话框
+    connect(statisticsBtn, &QPushButton::clicked, [=]() {
+        QDialog *statsDlg = new QDialog(this);
+        statsDlg->setWindowTitle("学习统计");
+        statsDlg->setFixedSize(800, 800);
+        statsDlg->setModal(true);
+        // 禁用所有可能的窗口动画效果
+        statsDlg->setAttribute(Qt::WA_NoSystemBackground, false);
+        statsDlg->setAttribute(Qt::WA_DontShowOnScreen, false);
+        statsDlg->setAttribute(Qt::WA_TranslucentBackground, false);
+        statsDlg->setWindowOpacity(1.0);
+
+        // 设置统计对话框样式
+        statsDlg->setStyleSheet(
+            "QDialog{background-color:#FFFFFF; border-radius:10px; border:1px solid #EEEEEE;}"
+            "QLabel{font-size:12px; color:#333333;}"
+            ".statLabel{font-size:14px; font-weight:bold; color:#2D8CF0;}"
+            ".statValue{font-size:16px; font-weight:bold; color:#34B7F1;}"
+            "QGroupBox{font-size:14px; font-weight:bold; color:#333333; border:1px solid #DDDDDD; border-radius:6px; margin-top:10px; padding-top:15px;}"
+            "QGroupBox::title{subcontrol-origin:margin; left:10px; padding:0 5px 0 5px;}"
+        );
+
+        // 创建滚动区域
+        QScrollArea *scrollArea = new QScrollArea(statsDlg);
+        scrollArea->setWidgetResizable(true);
+        scrollArea->setStyleSheet(
+            "QScrollArea{border:none;}"
+            "QScrollBar:vertical{width:8px; background-color:#F5F7FA; border-radius:4px;}"
+            "QScrollBar::handle:vertical{background-color:#C0C4CC; border-radius:4px;}"
+            "QScrollBar::handle:vertical:hover{background-color:#909399;}"
+        );
+        
+        // 创建容器widget
+        QWidget *scrollContent = new QWidget();
+        QVBoxLayout *statsLayout = new QVBoxLayout(scrollContent);
+        statsLayout->setSpacing(15);
+        statsLayout->setContentsMargins(20, 20, 20, 20);
+        
+        // 设置对话框布局
+        QVBoxLayout *dlgLayout = new QVBoxLayout(statsDlg);
+        dlgLayout->setContentsMargins(0, 0, 0, 0);
+        dlgLayout->addWidget(scrollArea);
+
+        // 学习时长统计
+        QGroupBox *studyHoursGroup = new QGroupBox("学习时长统计");
+        QGridLayout *studyHoursLayout = new QGridLayout(studyHoursGroup);
+        studyHoursLayout->setSpacing(10);
+        studyHoursLayout->setContentsMargins(15, 15, 15, 15);
+
+        studyHoursLayout->addWidget(new QLabel("总学习天数："), 0, 0, 1, 1, Qt::AlignRight);
+        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
+        studyHoursLayout->addWidget(new QLabel("总学习时长："), 1, 0, 1, 1, Qt::AlignRight);
+        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyHours()) + " 小时"), 1, 1, 1, 1, Qt::AlignLeft);
+        studyHoursLayout->addWidget(new QLabel("平均每天学习时长："), 2, 0, 1, 1, Qt::AlignRight);
+        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getAverageStudyHoursPerDay(), 'f', 1) + " 小时"), 2, 1, 1, 1, Qt::AlignLeft);
+
+        // 项目完成情况统计
+        QGroupBox *projectsGroup = new QGroupBox("项目完成情况");
+        QGridLayout *projectsLayout = new QGridLayout(projectsGroup);
+        projectsLayout->setSpacing(10);
+        projectsLayout->setContentsMargins(15, 15, 15, 15);
+
+        projectsLayout->addWidget(new QLabel("总项目数："), 0, 0, 1, 1, Qt::AlignRight);
+        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getTotalProjects()) + " 个"), 0, 1, 1, 1, Qt::AlignLeft);
+        projectsLayout->addWidget(new QLabel("完成项目数："), 1, 0, 1, 1, Qt::AlignRight);
+        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getCompletedProjects()) + " 个"), 1, 1, 1, 1, Qt::AlignLeft);
+        projectsLayout->addWidget(new QLabel("项目完成率："), 2, 0, 1, 1, Qt::AlignRight);
+        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getProjectCompletionRate(), 'f', 1) + "%"), 2, 1, 1, 1, Qt::AlignLeft);
+
+        // 最大连续天数
+        QGroupBox *continuousGroup = new QGroupBox("连续学习");
+        QGridLayout *continuousLayout = new QGridLayout(continuousGroup);
+        continuousLayout->setSpacing(10);
+        continuousLayout->setContentsMargins(15, 15, 15, 15);
+
+        continuousLayout->addWidget(new QLabel("最大连续学习天数："), 0, 0, 1, 1, Qt::AlignRight);
+        continuousLayout->addWidget(new QLabel(QString::number(appDatas.maxContinDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
+
+        // 最近30天学习趋势折线图
+        QGroupBox *lineChartGroup = new QGroupBox("最近30天学习趋势");
+        QVBoxLayout *lineChartLayout = new QVBoxLayout(lineChartGroup);
+        lineChartLayout->setContentsMargins(10, 10, 10, 10);
+        
+        QChart *lineChart = new QChart();
+        lineChart->setTitle("学习时长趋势（小时）");
+        lineChart->setAnimationOptions(QChart::SeriesAnimations);
+        
+        QLineSeries *lineSeries = new QLineSeries();
+        lineSeries->setName("学习时长");
+        
+        QDateTimeAxis *lineAxisX = new QDateTimeAxis();
+        lineAxisX->setFormat("MM-dd");
+        lineAxisX->setTitleText("日期");
+        
+        QValueAxis *lineAxisY = new QValueAxis();
+        lineAxisY->setTitleText("小时");
+        lineAxisY->setMin(0);
+        lineAxisY->setMax(8);
+        
+        // 获取最近30天的学习数据
+        QMap<QDate, DateStudyData> monthData = appDatas.getRecentStudyData(30);
+        QList<QDate> monthDates = monthData.keys();
+        std::sort(monthDates.begin(), monthDates.end());
+        
+        for (const QDate &date : monthDates) {
+            QDateTime dateTime;
+            dateTime.setDate(date);
+            int hours = monthData[date].studyHours;
+            lineSeries->append(dateTime.toMSecsSinceEpoch(), hours);
+        }
+        
+        lineChart->addSeries(lineSeries);
+        lineChart->addAxis(lineAxisX, Qt::AlignBottom);
+        lineChart->addAxis(lineAxisY, Qt::AlignLeft);
+        lineSeries->attachAxis(lineAxisX);
+        lineSeries->attachAxis(lineAxisY);
+        
+        QChartView *lineChartView = new QChartView(lineChart);
+        lineChartView->setRenderHint(QPainter::Antialiasing);
+        lineChartView->setMinimumHeight(200);
+        lineChartLayout->addWidget(lineChartView);
+
+        statsLayout->addWidget(studyHoursGroup);
+        statsLayout->addWidget(projectsGroup);
+        statsLayout->addWidget(continuousGroup);
+        statsLayout->addWidget(lineChartGroup);
+
+        // 关闭按钮
+        QHBoxLayout *closeLayout = new QHBoxLayout;
+        QPushButton *closeBtn = new QPushButton("关闭");
+        closeBtn->setStyleSheet("background-color:#2D8CF0; color:#FFFFFF; font-size:12px; padding:4px 20px; border-radius:4px; border:none;");
+        closeLayout->addStretch();
+        closeLayout->addWidget(closeBtn);
+        closeLayout->addStretch();
+
+        statsLayout->addLayout(closeLayout);
+
+        // 设置滚动区域内容
+        scrollArea->setWidget(scrollContent);
+
+        connect(closeBtn, &QPushButton::clicked, statsDlg, &QDialog::close);
+
+        statsDlg->exec();
+    });
     pageLayout->addLayout(monthLayout);
 
     // 日历主体

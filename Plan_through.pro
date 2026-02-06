@@ -1,5 +1,6 @@
 QT       += core gui
 QT       += network
+QT       += charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,25 +10,25 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-SOURCES += \
-    appdatas.cpp \
+SOURCES += appdatas.cpp \
     main.cpp \
     mainwindow.cpp \
     utils/datehelper.cpp \
     utils/widgetcontainer.cpp \
     widgets/dayview.cpp \
     widgets/monthview.cpp \
-    widgets/timeaxis.cpp
+    widgets/timeaxis.cpp \
+    windowservice/service.cpp
 
-HEADERS += \
-    appdatas.h \
+HEADERS += appdatas.h \
     datastruct.h \
     mainwindow.h \
     utils/datehelper.h \
     utils/widgetcontainer.h \
     widgets/dayview.h \
     widgets/monthview.h \
-    widgets/timeaxis.h
+    widgets/timeaxis.h \
+    windowservice/service.h
 
 FORMS += \
     mainwindow.ui
@@ -43,5 +44,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 RC_ICONS = app.ico
 
-RESOURCES += \
-    res.qrc
+# 请求管理员权限
+win32-g++: RC_FILE += app.rc
+win32-msvc: QMAKE_LFLAGS += /MANIFESTUAC:"level='requireAdministrator' uiAccess='false'"
+
+RESOURCES += res.qrc

@@ -33,7 +33,7 @@ IDC           = idc
 IDL           = midl
 ZIP           = zip -r -9
 DEF_FILE      = 
-RES_FILE      = Plan_through_resource_res.o
+RES_FILE      = app_res.o
 SED           = $(QMAKE) -install sed
 MOVE          = move
 SUBTARGETS    =  \
@@ -304,7 +304,10 @@ Makefile: Plan_through.pro C:/Qt/6.10.1/mingw_64/mkspecs/win32-g++/qmake.conf C:
 		C:/Qt/6.10.1/mingw_64/mkspecs/features/yacc.prf \
 		C:/Qt/6.10.1/mingw_64/mkspecs/features/lex.prf \
 		Plan_through.pro \
+		C:/Qt/6.10.1/mingw_64/lib/Qt6Charts.prl \
+		C:/Qt/6.10.1/mingw_64/lib/Qt6OpenGLWidgets.prl \
 		C:/Qt/6.10.1/mingw_64/lib/Qt6Widgets.prl \
+		C:/Qt/6.10.1/mingw_64/lib/Qt6OpenGL.prl \
 		C:/Qt/6.10.1/mingw_64/lib/Qt6Gui.prl \
 		C:/Qt/6.10.1/mingw_64/lib/Qt6Network.prl \
 		C:/Qt/6.10.1/mingw_64/lib/Qt6Core.prl \
@@ -548,7 +551,10 @@ C:/Qt/6.10.1/mingw_64/mkspecs/features/exceptions.prf:
 C:/Qt/6.10.1/mingw_64/mkspecs/features/yacc.prf:
 C:/Qt/6.10.1/mingw_64/mkspecs/features/lex.prf:
 Plan_through.pro:
+C:/Qt/6.10.1/mingw_64/lib/Qt6Charts.prl:
+C:/Qt/6.10.1/mingw_64/lib/Qt6OpenGLWidgets.prl:
 C:/Qt/6.10.1/mingw_64/lib/Qt6Widgets.prl:
+C:/Qt/6.10.1/mingw_64/lib/Qt6OpenGL.prl:
 C:/Qt/6.10.1/mingw_64/lib/Qt6Gui.prl:
 C:/Qt/6.10.1/mingw_64/lib/Qt6Network.prl:
 C:/Qt/6.10.1/mingw_64/lib/Qt6Core.prl:

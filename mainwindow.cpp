@@ -6,11 +6,16 @@
 #include "mainwindow.h"
 #include "appdatas.h"
 
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // 去除默认标题栏
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint);
+    
+    // 设置窗口图标
+    this->setWindowIcon(QIcon(":/16.ico"));
     
     widgetContainer("main", this);
     initUI();
@@ -28,6 +33,17 @@ MainWindow::MainWindow(QWidget *parent)
     } else {
         switchToDayView();
     }
+
+    // 强制窗口显示
+    this->showNormal();
+    this->raise();
+    this->activateWindow();
+
+    // 强制设置窗口位置到屏幕中心
+    QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
+    int x = (screenGeometry.width() - this->width()) / 2;
+    int y = (screenGeometry.height() - this->height()) / 2;
+    this->move(x, y);
 
     // 如果设置了开机自启，则隐藏窗口
     if (appDatas.isAutoStartup()) {
@@ -152,9 +168,6 @@ void MainWindow::switchToDayView()
     
     QPoint originalPos = currentWidget->pos();
     
-    // 月视图→日视图：月视图向右滑出
-    QPoint targetPos = originalPos + QPoint(60, 0);
-    
     // 创建退出动画 - 只执行一半（快→慢阶段）
     QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
     
@@ -258,9 +271,6 @@ void MainWindow::switchToMonthView()
     
     QPoint originalPos = currentWidget->pos();
     
-    // 日视图→月视图：日视图向左滑出
-    QPoint targetPos = originalPos - QPoint(60, 0);
-    
     // 创建退出动画 - 只执行一半（快→慢阶段）
     QParallelAnimationGroup *exitGroup = new QParallelAnimationGroup(this);
     
@@ -346,6 +356,7 @@ void MainWindow::showSettingsWindow()
     settingsDlg->setWindowTitle("软件设置");
     settingsDlg->setFixedSize(350, 300);
     settingsDlg->setModal(true);
+    
     // 禁用所有可能的窗口动画效果
     settingsDlg->setAttribute(Qt::WA_NoSystemBackground, false);
     settingsDlg->setAttribute(Qt::WA_DontShowOnScreen, false);
@@ -442,93 +453,10 @@ void MainWindow::showSettingsWindow()
     createBackupBtn->setStyleSheet("background-color:#34B7F1;");
     QPushButton *restoreBackupBtn = new QPushButton("从备份恢复");
     restoreBackupBtn->setStyleSheet("background-color:#9370DB;");
-    QPushButton *statisticsBtn = new QPushButton("学习统计");
-    statisticsBtn->setStyleSheet("background-color:#52C41A;");
 
     backupLayout->addWidget(createBackupBtn);
     backupLayout->addWidget(restoreBackupBtn);
-    backupLayout->addWidget(statisticsBtn);
     backupLayout->addStretch();
-
-    // 学习统计对话框
-    connect(statisticsBtn, &QPushButton::clicked, [=]() {
-        QDialog *statsDlg = new QDialog(settingsDlg);
-        statsDlg->setWindowTitle("学习统计");
-        statsDlg->setFixedSize(500, 400);
-        statsDlg->setModal(true);
-        // 禁用所有可能的窗口动画效果
-        statsDlg->setAttribute(Qt::WA_NoSystemBackground, false);
-        statsDlg->setAttribute(Qt::WA_DontShowOnScreen, false);
-        statsDlg->setAttribute(Qt::WA_TranslucentBackground, false);
-        statsDlg->setWindowOpacity(1.0);
-
-        // 设置统计对话框样式
-        statsDlg->setStyleSheet(
-            "QDialog{background-color:#FFFFFF; border-radius:10px; border:1px solid #EEEEEE;}"
-            "QLabel{font-size:12px; color:#333333;}"
-            ".statLabel{font-size:14px; font-weight:bold; color:#2D8CF0;}"
-            ".statValue{font-size:16px; font-weight:bold; color:#34B7F1;}"
-            "QGroupBox{font-size:14px; font-weight:bold; color:#333333; border:1px solid #DDDDDD; border-radius:6px; margin-top:10px; padding-top:15px;}"
-            "QGroupBox::title{subcontrol-origin:margin; left:10px; padding:0 5px 0 5px;}"
-        );
-
-        QVBoxLayout *statsLayout = new QVBoxLayout(statsDlg);
-        statsLayout->setSpacing(15);
-        statsLayout->setContentsMargins(20, 20, 20, 20);
-
-        // 学习时长统计
-        QGroupBox *studyHoursGroup = new QGroupBox("学习时长统计");
-        QGridLayout *studyHoursLayout = new QGridLayout(studyHoursGroup);
-        studyHoursLayout->setSpacing(10);
-        studyHoursLayout->setContentsMargins(15, 15, 15, 15);
-
-        studyHoursLayout->addWidget(new QLabel("总学习天数："), 0, 0, 1, 1, Qt::AlignRight);
-        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
-        studyHoursLayout->addWidget(new QLabel("总学习时长："), 1, 0, 1, 1, Qt::AlignRight);
-        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getTotalStudyHours()) + " 小时"), 1, 1, 1, 1, Qt::AlignLeft);
-        studyHoursLayout->addWidget(new QLabel("平均每天学习时长："), 2, 0, 1, 1, Qt::AlignRight);
-        studyHoursLayout->addWidget(new QLabel(QString::number(appDatas.getAverageStudyHoursPerDay(), 'f', 1) + " 小时"), 2, 1, 1, 1, Qt::AlignLeft);
-
-        // 项目完成情况统计
-        QGroupBox *projectsGroup = new QGroupBox("项目完成情况");
-        QGridLayout *projectsLayout = new QGridLayout(projectsGroup);
-        projectsLayout->setSpacing(10);
-        projectsLayout->setContentsMargins(15, 15, 15, 15);
-
-        projectsLayout->addWidget(new QLabel("总项目数："), 0, 0, 1, 1, Qt::AlignRight);
-        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getTotalProjects()) + " 个"), 0, 1, 1, 1, Qt::AlignLeft);
-        projectsLayout->addWidget(new QLabel("完成项目数："), 1, 0, 1, 1, Qt::AlignRight);
-        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getCompletedProjects()) + " 个"), 1, 1, 1, 1, Qt::AlignLeft);
-        projectsLayout->addWidget(new QLabel("项目完成率："), 2, 0, 1, 1, Qt::AlignRight);
-        projectsLayout->addWidget(new QLabel(QString::number(appDatas.getProjectCompletionRate(), 'f', 1) + "%"), 2, 1, 1, 1, Qt::AlignLeft);
-
-        // 最大连续天数
-        QGroupBox *continuousGroup = new QGroupBox("连续学习");
-        QGridLayout *continuousLayout = new QGridLayout(continuousGroup);
-        continuousLayout->setSpacing(10);
-        continuousLayout->setContentsMargins(15, 15, 15, 15);
-
-        continuousLayout->addWidget(new QLabel("最大连续学习天数："), 0, 0, 1, 1, Qt::AlignRight);
-        continuousLayout->addWidget(new QLabel(QString::number(appDatas.maxContinDays()) + " 天"), 0, 1, 1, 1, Qt::AlignLeft);
-
-        statsLayout->addWidget(studyHoursGroup);
-        statsLayout->addWidget(projectsGroup);
-        statsLayout->addWidget(continuousGroup);
-
-        // 关闭按钮
-        QHBoxLayout *closeLayout = new QHBoxLayout;
-        QPushButton *closeBtn = new QPushButton("关闭");
-        closeBtn->setStyleSheet("background-color:#2D8CF0; color:#FFFFFF; font-size:12px; padding:4px 20px; border-radius:4px; border:none;");
-        closeLayout->addStretch();
-        closeLayout->addWidget(closeBtn);
-        closeLayout->addStretch();
-
-        statsLayout->addLayout(closeLayout);
-
-        connect(closeBtn, &QPushButton::clicked, statsDlg, &QDialog::close);
-
-        statsDlg->exec();
-    });
 
     // 连接备份和恢复按钮的信号槽
     connect(createBackupBtn, &QPushButton::clicked, [=]() {
@@ -642,13 +570,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
         if (m_resizeHandle->geometry().contains(event->pos())) {
             m_isResizing = true;
             m_resizeEdge = 12; // 特殊标记为手柄调整
-            m_resizeStartPos = event->globalPos();
+            m_resizeStartPos = event->globalPosition().toPoint();
             this->setCursor(Qt::SizeFDiagCursor);
         }
         // 检查是否在标题栏区域（顶部标签栏）
         else if (event->pos().y() <= 60) { // 假设标题栏高度为60
             m_isDragging = true;
-            m_dragStartPos = event->globalPos() - this->frameGeometry().topLeft();
+            m_dragStartPos = event->globalPosition().toPoint() - this->frameGeometry().topLeft();
             this->setCursor(Qt::ClosedHandCursor);
         }
     }
@@ -660,7 +588,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     // 处理调整大小
     if (m_isResizing) {
-        QPoint delta = event->globalPos() - m_resizeStartPos;
+        QPoint delta = event->globalPosition().toPoint() - m_resizeStartPos;
         QRect geometry = this->geometry();
         
         if (m_resizeEdge == 12) { // 缩放手柄
@@ -672,7 +600,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
                 geometry.setWidth(newWidth);
                 geometry.setHeight(newHeight);
                 this->setGeometry(geometry);
-                m_resizeStartPos = event->globalPos();
+                m_resizeStartPos = event->globalPosition().toPoint();
                 // 更新手柄位置
                 m_resizeHandle->move(this->width() - 20, this->height() - 20);
             }
@@ -680,7 +608,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     }
     // 处理拖动
     else if (m_isDragging) {
-        this->move(event->globalPos() - m_dragStartPos);
+        this->move(event->globalPosition().toPoint() - m_dragStartPos);
     }
     // 处理鼠标悬停时的光标变化
     else {

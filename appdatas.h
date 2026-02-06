@@ -11,6 +11,9 @@
 #include <QApplication>
 #include <QStandardPaths>
 
+// 包含服务管理类
+#include "windowservice/service.h"
+
 // 应用数据管理类，负责用户数据读取与存储
 class AppDatas
 {

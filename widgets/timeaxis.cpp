@@ -125,10 +125,40 @@ void TimeAxis::confirmTimeAxisItem(int hour, const QString& type)
     if(m_timeAxisBtnMap.contains(hour)){
         QPushButton* btn = m_timeAxisBtnMap[hour];
         btn->setText(type);
-        btn->setStyleSheet(
-            "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#ECF5FF;color:#2D8CF0;font-weight:bold;}"
-            "QPushButton:hover{background-color:#E6F0FF;}"
-            "QPushButton:pressed{background-color:#D9E8FF;}");
+        
+        // 根据任务类型设置不同的颜色背景
+        QString styleSheet;
+        if (type == "学习") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#ECF5FF;color:#2D8CF0;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#E6F0FF;}"
+                         "QPushButton:pressed{background-color:#D9E8FF;}";
+        } else if (type == "吃饭") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#E8F5E9;color:#2E7D32;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#D4EDDA;color:#155724;}"
+                         "QPushButton:pressed{background-color:#C3E6CB;color:#155724;}";
+        } else if (type == "睡觉") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#F3E5F5;color:#6A1B9A;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#E1BEE7;color:#4A148C;}"
+                         "QPushButton:pressed{background-color:#CE93D8;color:#4A148C;}";
+        } else if (type == "洗澡") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#E0F7FA;color:#006064;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#B2EBF2;color:#004D40;}"
+                         "QPushButton:pressed{background-color:#80DEEA;color:#004D40;}";
+        } else if (type == "游戏") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#FFEBEE;color:#C62828;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#FFCDD2;color:#B71C1C;}"
+                         "QPushButton:pressed{background-color:#EF9A9A;color:#B71C1C;}";
+        } else if (type == "杂事") {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#FFF8E1;color:#E65100;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#FFECB3;color:#E65100;}"
+                         "QPushButton:pressed{background-color:#FFE082;color:#E65100;}";
+        } else {
+            styleSheet = "QPushButton{font-size:12px;padding:6px 3px;border-radius:10px;border:none;background-color:#ECF5FF;color:#2D8CF0;font-weight:bold;}"
+                         "QPushButton:hover{background-color:#E6F0FF;}"
+                         "QPushButton:pressed{background-color:#D9E8FF;}";
+        }
+        
+        btn->setStyleSheet(styleSheet);
     }
 
     data.totalProjects = data.timeAxisData.count();

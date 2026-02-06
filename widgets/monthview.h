@@ -9,6 +9,11 @@
 #include <QMouseEvent>
 #include <QMap>
 #include <QDate>
+#include <QChart>
+#include <QChartView>
+#include <QLineSeries>
+#include <QDateTimeAxis>
+#include <QValueAxis>
 
 // 前向声明
 class MainWindow;
