@@ -45,7 +45,11 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RC_ICONS = app.ico
 
 # 请求管理员权限
-win32-g++: RC_FILE += app.rc
+CONFIG(debug, debug|release) {
+    win32-g++: RC_FILE += app-debug.rc
+} else {
+    win32-g++: RC_FILE += app.rc
+}
 win32-msvc: QMAKE_LFLAGS += /MANIFESTUAC:"level='requireAdministrator' uiAccess='false'"
 
 RESOURCES += res.qrc
