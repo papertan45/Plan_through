@@ -39,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
     this->raise();
     this->activateWindow();
 
+    // 设置窗口最小大小
+    this->setMinimumSize(400, 500);
+    
     // 强制设置窗口位置到屏幕中心
     QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
     int x = (screenGeometry.width() - this->width()) / 2;
@@ -566,10 +569,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        // 检查是否在缩放手柄上
-        if (m_resizeHandle->geometry().contains(event->pos())) {
+        // 检查是否点击了调整大小手柄
+        if (m_resizeHandle && m_resizeHandle->geometry().contains(event->pos())) {
             m_isResizing = true;
-            m_resizeEdge = 12; // 特殊标记为手柄调整
             m_resizeStartPos = event->globalPosition().toPoint();
             this->setCursor(Qt::SizeFDiagCursor);
         }
@@ -589,22 +591,19 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     // 处理调整大小
     if (m_isResizing) {
         QPoint delta = event->globalPosition().toPoint() - m_resizeStartPos;
-        QRect geometry = this->geometry();
         
-        if (m_resizeEdge == 12) { // 缩放手柄
-            // 通过手柄调整时，同时改变宽度和高度
-            int newWidth = geometry.width() + delta.x();
-            int newHeight = geometry.height() + delta.y();
-            
-            if (newWidth >= 400 && newHeight >= 800) {
-                geometry.setWidth(newWidth);
-                geometry.setHeight(newHeight);
-                this->setGeometry(geometry);
-                m_resizeStartPos = event->globalPosition().toPoint();
-                // 更新手柄位置
-                m_resizeHandle->move(this->width() - 20, this->height() - 20);
-            }
-        }
+        // 分别计算新的宽度和高度，确保不小于最小值
+        int newWidth = this->width() + delta.x();
+        int newHeight = this->height() + delta.y();
+        
+        // 确保宽度不小于最小值
+        newWidth = qMax(newWidth, this->minimumWidth());
+        // 确保高度不小于最小值
+        newHeight = qMax(newHeight, this->minimumHeight());
+        
+        // 调整窗口大小
+        this->resize(newWidth, newHeight);
+        m_resizeStartPos = event->globalPosition().toPoint();
     }
     // 处理拖动
     else if (m_isDragging) {
@@ -612,8 +611,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     }
     // 处理鼠标悬停时的光标变化
     else {
-        // 检查是否在缩放手柄上
-        if (m_resizeHandle->geometry().contains(event->pos())) {
+        // 检查是否在调整大小手柄上
+        if (m_resizeHandle && m_resizeHandle->geometry().contains(event->pos())) {
             this->setCursor(Qt::SizeFDiagCursor);
         }
         // 检查是否在标题栏区域（顶部标签栏）
@@ -631,9 +630,14 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        m_isDragging = false;
-        m_isResizing = false;
-        this->setCursor(Qt::ArrowCursor);
+        if (m_isResizing) {
+            m_isResizing = false;
+            this->setCursor(Qt::ArrowCursor);
+        }
+        if (m_isDragging) {
+            m_isDragging = false;
+            this->setCursor(Qt::ArrowCursor);
+        }
     }
     QMainWindow::mouseReleaseEvent(event);
 }
@@ -641,39 +645,34 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 // 窗口大小改变事件处理
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    // 更新缩放手柄位置，确保它始终在右下角
+    // 更新调整大小手柄的位置
     if (m_resizeHandle) {
-        m_resizeHandle->move(this->width() - 20, this->height() - 20);
+        int handleSize = 12;
+        m_resizeHandle->move(this->width() - handleSize, this->height() - handleSize);
     }
     QMainWindow::resizeEvent(event);
 }
 
-// 获取调整大小的边缘
-int MainWindow::getResizeEdge(const QPoint &pos)
+// 事件处理函数，拦截所有事件
+bool MainWindow::event(QEvent *event)
 {
-    int edge = 0;
-    QRect rect = this->rect();
-    
-    if (pos.x() <= m_resizeMargin) {
-        edge |= 1; // 左边缘
-    }
-    if (pos.y() <= m_resizeMargin) {
-        edge |= 2; // 上边缘
-    }
-    if (pos.x() >= rect.width() - m_resizeMargin) {
-        edge |= 4; // 右边缘
-    }
-    if (pos.y() >= rect.height() - m_resizeMargin) {
-        edge |= 8; // 下边缘
+    // 拦截窗口显示事件，确保调整大小手柄位置正确
+    if (event->type() == QEvent::Show) {
+        // 更新调整大小手柄的位置
+        if (m_resizeHandle) {
+            int handleSize = 12;
+            m_resizeHandle->move(this->width() - handleSize, this->height() - handleSize);
+        }
     }
     
-    return edge;
+    return QMainWindow::event(event);
 }
+
+
 
 // 初始化用户界面
 void MainWindow::initUI()
 {
-    this->resize(500, 600);
     this->setMouseTracking(true); // 启用鼠标跟踪，确保鼠标移动时触发mouseMoveEvent
 
     QWidget* centralWidget = new QWidget(this);
@@ -784,14 +783,14 @@ void MainWindow::initUI()
         }
     });
     
-    // 创建右下角缩放手柄
+    // 创建调整大小手柄
+    int handleSize = 12;
     m_resizeHandle = new QWidget(this);
-    m_resizeHandle->setFixedSize(12, 12);
+    m_resizeHandle->setFixedSize(handleSize, handleSize);
     m_resizeHandle->setStyleSheet(
-        "QWidget{background-color:#2D8CF0; border-radius:6px; border:2px solid #FFFFFF;}"
-        "QWidget:hover{background-color:#1D7AD9; cursor:sizeFDiagCursor;}"
+        "QWidget{background-color:#2D8CF0; border-radius:4px;}"
+        "QWidget:hover{background-color:#1D7AD9; cursor:se-resize;}"
     );
-    m_resizeHandle->setCursor(Qt::SizeFDiagCursor);
-    m_resizeHandle->move(this->width() - 20, this->height() - 20);
-    m_resizeHandle->show();
+    m_resizeHandle->move(this->width() - handleSize, this->height() - handleSize);
+    m_resizeHandle->setMouseTracking(true);
 }

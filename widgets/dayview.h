@@ -30,7 +30,6 @@ public:
     void setProgressStyle(QString style);
 
 private:
-    QLabel *m_targetHourShowLabel = nullptr;
     QLabel *m_selectedDateLabel = nullptr;
     QLabel *m_todayStudyHourLabel = nullptr;
     QLabel *m_continuousDaysLabel = nullptr;

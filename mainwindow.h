@@ -117,6 +117,9 @@ protected:
     
     // 鼠标释放事件处理
     void mouseReleaseEvent(QMouseEvent *event) override;
+    
+    // 事件处理函数，拦截所有事件
+    bool event(QEvent *event) override;
 
 private:
     // 初始化用户界面
@@ -125,8 +128,7 @@ private:
     // 初始化系统托盘
     void initSystemTray();
     
-    // 获取调整大小的边缘
-    int getResizeEdge(const QPoint &pos);
+
 
 private:
     QPushButton *m_dayViewBtn = nullptr;
@@ -135,7 +137,6 @@ private:
     QPushButton *m_minimizeBtn = nullptr;
     QPushButton *m_closeBtn = nullptr;
     QStackedWidget *m_mainStackedWidget = nullptr;
-    QWidget *m_resizeHandle = nullptr; // 右下角缩放手柄
 
     QSystemTrayIcon *m_systemTrayIcon = nullptr;
     QMenu *m_trayMenu = nullptr;
@@ -150,11 +151,10 @@ private:
     bool m_isDragging = false;
     QPoint m_dragStartPos;
     
-    // 窗口缩放相关
+    // 窗口大小调整相关
+    QWidget *m_resizeHandle = nullptr;
     bool m_isResizing = false;
     QPoint m_resizeStartPos;
-    int m_resizeEdge = 0;
-    const int m_resizeMargin = 5; // 调整大小的边缘宽度
 };
 
 #endif

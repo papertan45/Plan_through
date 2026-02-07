@@ -9,8 +9,10 @@ static MainWindow *g_mainWindow = nullptr;
 int main(int argc, char *argv[])
 {
     try {
+        // 设置高DPI策略，防止窗口在不同显示器间拖动时大小改变
         QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
-        QApplication::setAttribute(Qt::AA_Use96Dpi);
+        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, false);
+        QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
         QApplication a(argc, argv);
 
         qDebug() << "Application started";

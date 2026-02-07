@@ -14,14 +14,11 @@ DayView::DayView(QWidget *parent)
     pageLayout->setContentsMargins(0, 0, 0, 0);
     pageLayout->setSpacing(10);  // 日视图间距紧凑
 
-    QHBoxLayout* funcBtnLayout = new QHBoxLayout;
+    // 第一行：日期相关按钮
+    QHBoxLayout* dateBtnLayout = new QHBoxLayout;
     QPushButton* dateSelectBtn = new QPushButton("日期选择");
     QPushButton* todayBtn = new QPushButton("今日");
-    QPushButton* setTargetBtn = new QPushButton("设置目标");
     QPushButton* clearBtn = new QPushButton("清除当日");
-    m_targetHourShowLabel = new QLabel();
-    m_targetHourShowLabel->setStyleSheet("font-size:12px; font-weight:bold; color:#27AE60; padding:0 6px;");
-    m_targetHourShowLabel->setText(QString("每日目标：%1 小时").arg(appDatas.targetHour()));
 
     QString funcBtnStyle =
         "QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#FFFFFF; color:#333333;}"
@@ -30,17 +27,14 @@ DayView::DayView(QWidget *parent)
     clearBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#FF6B6B; color:#FFFFFF;}"
                             "QPushButton:hover{background-color:#FF5252;}"
                             "QPushButton:pressed{background-color:#FF3B3B;}");
-    setTargetBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#27AE60; color:#FFFFFF;}"
-                                "QPushButton:hover{background-color:#219653;}"
-                                "QPushButton:pressed{background-color:#1E8845;}");
 
-    funcBtnLayout->addWidget(dateSelectBtn);
-    funcBtnLayout->addWidget(todayBtn);
-    funcBtnLayout->addStretch();
-    funcBtnLayout->addWidget(m_targetHourShowLabel);
-    funcBtnLayout->addWidget(setTargetBtn);
-    funcBtnLayout->addWidget(clearBtn);
-    pageLayout->addLayout(funcBtnLayout);
+    dateBtnLayout->addWidget(dateSelectBtn);
+    dateBtnLayout->addWidget(todayBtn);
+    dateBtnLayout->addStretch();
+    dateBtnLayout->addWidget(clearBtn);
+    pageLayout->addLayout(dateBtnLayout);
+
+
 
     QGroupBox* progressGroup = new QGroupBox;
     progressGroup->setStyleSheet("QGroupBox{font-size:13px; font-weight:bold; color:#2D8CF0; border:2px solid #ECF5FF; border-radius:8px; padding:8px; margin:0;}");
@@ -56,8 +50,23 @@ DayView::DayView(QWidget *parent)
     progressHeaderLayout->addStretch();
     progressHeaderLayout->addWidget(m_selectedDateLabel);
 
-    m_todayStudyHourLabel = new QLabel(QString("今日学习：0小时 / 目标%1小时").arg(appDatas[DateHelper::currentDate()].studyHours));
+    // 创建今日学习和设置目标的水平布局
+    QHBoxLayout* todayStudyLayout = new QHBoxLayout;
+    m_todayStudyHourLabel = new QLabel();
     m_todayStudyHourLabel->setStyleSheet("font-size:12px; font-weight:bold; color:#333333; padding:4px 0;");
+    // 使用HTML格式化文本，将目标部分设为绿色
+    m_todayStudyHourLabel->setText(QString("今日学习：0小时 / <font color='#27AE60'>目标%1小时</font>").arg(appDatas.targetHour()));
+    m_todayStudyHourLabel->setTextFormat(Qt::RichText);
+
+    // 添加设置目标按钮
+    QPushButton* setTargetBtn = new QPushButton("设置目标");
+    setTargetBtn->setStyleSheet("QPushButton{font-size:12px; font-weight:bold; padding:5px 12px; border-radius:6px; border:none; background-color:#27AE60; color:#FFFFFF;}"
+                                "QPushButton:hover{background-color:#219653;}"
+                                "QPushButton:pressed{background-color:#1E8845;}");
+
+    todayStudyLayout->addWidget(m_todayStudyHourLabel);
+    todayStudyLayout->addStretch();
+    todayStudyLayout->addWidget(setTargetBtn);
 
     m_dayProgressBar = new QProgressBar;
     m_dayProgressBar->setAlignment(Qt::AlignCenter);
@@ -65,9 +74,12 @@ DayView::DayView(QWidget *parent)
     m_dayProgressBar->setValue(0);
 
     progressLayout->addLayout(progressHeaderLayout);
-    progressLayout->addWidget(m_todayStudyHourLabel);
+    progressLayout->addLayout(todayStudyLayout);
     progressLayout->addWidget(m_dayProgressBar);
     pageLayout->addWidget(progressGroup);
+
+    // 连接设置目标按钮信号
+    connect(setTargetBtn, &QPushButton::clicked, this, &DayView::showSetTargetDialog);
 
     QGroupBox* statsGroup = new QGroupBox("📊 打卡统计");
     statsGroup->setStyleSheet("QGroupBox{font-size:13px; font-weight:bold; color:#2D8CF0; border:2px solid #ECF5FF; border-radius:8px; padding:8px;}");
@@ -113,7 +125,8 @@ void DayView::updateDayViewStats()
     DateStudyData data = appDatas[DateHelper::currentDate()];
     int continuousDays = appDatas.calculateContinuousDays();
     appDatas.setMaxContinDays(qMax(appDatas.maxContinDays(), continuousDays));
-    m_todayStudyHourLabel->setText(QString("今日学习：%1小时 / 目标%2小时").arg(data.studyHours).arg(appDatas.targetHour()));
+    m_todayStudyHourLabel->setText(QString("今日学习：%1小时 / <font color='#27AE60'>目标%2小时</font>").arg(data.studyHours).arg(appDatas.targetHour()));
+    m_todayStudyHourLabel->setTextFormat(Qt::RichText);
     if(data.studyHours >= appDatas.targetHour())
     {
         m_dayProgressBar->setValue(appDatas.targetHour());
@@ -197,17 +210,17 @@ void DayView::showSetTargetDialog()
         layout->addWidget(hourBtn);
 
         connect(hourBtn, &QPushButton::clicked, [=](){
-            appDatas.setTargetHour(hour);
-            m_targetHourShowLabel->setText(QString("每日目标：%1 小时").arg(appDatas.targetHour()));
-            m_todayStudyHourLabel->setText(QString("今日学习：%1小时 / 目标%2小时").arg(appDatas[DateHelper::currentDate()].studyHours).arg(appDatas.targetHour()));
-            m_dayProgressBar->setRange(0,appDatas.targetHour());
-            if(appDatas[DateHelper::currentDate()].studyHours >= appDatas.targetHour())
-                m_dayProgressBar->setValue(appDatas.targetHour());
-            else
-                m_dayProgressBar->setValue(appDatas[DateHelper::currentDate()].studyHours);
-            m_dayProgressBar->update();
-            dialog->close();
-        });
+                appDatas.setTargetHour(hour);
+                m_todayStudyHourLabel->setText(QString("今日学习：%1小时 / <font color='#27AE60'>目标%2小时</font>").arg(appDatas[DateHelper::currentDate()].studyHours).arg(appDatas.targetHour()));
+                m_todayStudyHourLabel->setTextFormat(Qt::RichText);
+                m_dayProgressBar->setRange(0,appDatas.targetHour());
+                if(appDatas[DateHelper::currentDate()].studyHours >= appDatas.targetHour())
+                    m_dayProgressBar->setValue(appDatas.targetHour());
+                else
+                    m_dayProgressBar->setValue(appDatas[DateHelper::currentDate()].studyHours);
+                m_dayProgressBar->update();
+                dialog->close();
+            });
     }
 
     QPushButton* cancelBtn = new QPushButton("取消");
